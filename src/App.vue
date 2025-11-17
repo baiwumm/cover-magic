@@ -1,6 +1,4 @@
 <template>
-  <!-- Vercel 统计 -->
-  <Analytics />
   <!-- 加载动画 -->
   <LoadingScreen v-if="isLoading" />
   <n-config-provider v-else :theme="theme">
@@ -232,7 +230,7 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
 import { useHead } from "@unhead/vue";
-import { Analytics } from "@vercel/analytics/vue";
+import { inject } from "@vercel/analytics";
 import {
   NGrid,
   NGi,
@@ -826,5 +824,8 @@ onMounted(() => {
 
   // 加载保存的配置
   loadSavedConfig();
+
+  // 初始化 Vercel 统计代码
+  inject();
 });
 </script>
