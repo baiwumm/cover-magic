@@ -1,46 +1,80 @@
 <template>
+  <!-- Vercel 统计 -->
+  <Analytics />
   <!-- 加载动画 -->
   <LoadingScreen v-if="isLoading" />
-
   <n-config-provider v-else :theme="theme">
     <n-message-provider>
-      <div class="min-h-screen" :class="[
-        isDarkMode
-          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark-mode'
-          : 'bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50',
-      ]">
+      <div
+        class="min-h-screen"
+        :class="[
+          isDarkMode
+            ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark-mode'
+            : 'bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50',
+        ]"
+      >
         <!-- 顶部标题栏 -->
-        <HeaderPanel :title="siteInfo.name" :subtitle="siteInfo.description" @header-action="handleHeaderAction"
-          @theme-change="handleThemeChange" />
+        <HeaderPanel
+          :title="siteInfo.name"
+          :subtitle="siteInfo.description"
+          @header-action="handleHeaderAction"
+          @theme-change="handleThemeChange"
+        />
 
         <div class="container mx-auto px-6 mt-8">
           <!-- 预览区域 -->
-          <div :class="isDarkMode
-            ? 'bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-700/50'
-            : 'bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-200/50'
-            ">
+          <div
+            :class="
+              isDarkMode
+                ? 'bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-700/50'
+                : 'bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-200/50'
+            "
+          >
             <!-- 预览区域标题和操作按钮 - 在小屏幕上改为垂直排列 -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-              <h2 class="text-xl font-bold flex items-center gap-1"
-                :class="isDarkMode ? 'text-gray-100' : 'text-gray-800'">
-                <Icon icon="material-symbols:preview" class="text-2xl"
-                  :class="isDarkMode ? 'text-blue-400' : 'text-blue-600'" />
+              <h2
+                class="text-xl font-bold flex items-center gap-1"
+                :class="isDarkMode ? 'text-gray-100' : 'text-gray-800'"
+              >
+                <Icon
+                  icon="material-symbols:preview"
+                  class="text-2xl"
+                  :class="isDarkMode ? 'text-blue-400' : 'text-blue-600'"
+                />
                 实时预览
               </h2>
               <div class="flex flex-wrap items-center gap-2">
                 <!-- 全局操作按钮 - 移到预览区域标题栏 -->
-                <n-button size="small" type="info" secondary class="flex items-center gap-1"
-                  :class="isDarkMode ? 'hover:bg-cyan-700/50' : 'hover:bg-cyan-100'" @click="openThemeSelector">
+                <n-button
+                  size="small"
+                  type="info"
+                  secondary
+                  class="flex items-center gap-1"
+                  :class="isDarkMode ? 'hover:bg-cyan-700/50' : 'hover:bg-cyan-100'"
+                  @click="openThemeSelector"
+                >
                   <Icon icon="material-symbols:palette-outline" />
                   主题选择
                 </n-button>
-                <n-button size="small" type="primary" secondary class="flex items-center gap-1"
-                  :class="isDarkMode ? 'hover:bg-blue-700/50' : 'hover:bg-blue-100'" @click="saveCurrentConfig">
+                <n-button
+                  size="small"
+                  type="primary"
+                  secondary
+                  class="flex items-center gap-1"
+                  :class="isDarkMode ? 'hover:bg-blue-700/50' : 'hover:bg-blue-100'"
+                  @click="saveCurrentConfig"
+                >
                   <Icon icon="material-symbols:save-outline" />
                   保存配置
                 </n-button>
-                <n-button size="small" type="warning" secondary class="flex items-center gap-1"
-                  :class="isDarkMode ? 'hover:bg-amber-700/50' : 'hover:bg-amber-100'" @click="showResetConfirm = true">
+                <n-button
+                  size="small"
+                  type="warning"
+                  secondary
+                  class="flex items-center gap-1"
+                  :class="isDarkMode ? 'hover:bg-amber-700/50' : 'hover:bg-amber-100'"
+                  @click="showResetConfirm = true"
+                >
                   <Icon icon="material-symbols:restart-alt" />
                   重置配置
                 </n-button>
@@ -58,12 +92,17 @@
                         <span class="font-medium text-sm truncate sm:hidden">背景</span>
                       </div>
                     </template>
-                    <BackgroundPanel :backgroundConfig="backgroundConfig" @update:backgroundConfig="
-                      (newBackgroundConfig) => {
-                        Object.assign(backgroundConfig, newBackgroundConfig);
-                        updateCanvas();
-                      }
-                    " @image-upload="handleImageUpload" @canvas-update="updateCanvas" />
+                    <BackgroundPanel
+                      :backgroundConfig="backgroundConfig"
+                      @update:backgroundConfig="
+                        (newBackgroundConfig) => {
+                          Object.assign(backgroundConfig, newBackgroundConfig);
+                          updateCanvas();
+                        }
+                      "
+                      @image-upload="handleImageUpload"
+                      @canvas-update="updateCanvas"
+                    />
                   </n-tab-pane>
 
                   <n-tab-pane name="icon-panel">
@@ -74,12 +113,17 @@
                         <span class="font-medium text-sm truncate sm:hidden">图标</span>
                       </div>
                     </template>
-                    <IconPanel :iconConfig="iconConfig" @update:iconConfig="
-                      (newIconConfig) => {
-                        Object.assign(iconConfig, newIconConfig);
-                        updateCanvas();
-                      }
-                    " @icon-load="loadIcon" @canvas-update="updateCanvas" />
+                    <IconPanel
+                      :iconConfig="iconConfig"
+                      @update:iconConfig="
+                        (newIconConfig) => {
+                          Object.assign(iconConfig, newIconConfig);
+                          updateCanvas();
+                        }
+                      "
+                      @icon-load="loadIcon"
+                      @canvas-update="updateCanvas"
+                    />
                   </n-tab-pane>
 
                   <n-tab-pane name="title-panel">
@@ -90,12 +134,16 @@
                         <span class="font-medium text-sm truncate sm:hidden">标题</span>
                       </div>
                     </template>
-                    <TitlePanel :titleConfig="titleConfig" @update:titleConfig="
-                      (newTitleConfig) => {
-                        Object.assign(titleConfig, newTitleConfig);
-                        updateCanvas();
-                      }
-                    " @canvas-update="updateCanvas" />
+                    <TitlePanel
+                      :titleConfig="titleConfig"
+                      @update:titleConfig="
+                        (newTitleConfig) => {
+                          Object.assign(titleConfig, newTitleConfig);
+                          updateCanvas();
+                        }
+                      "
+                      @canvas-update="updateCanvas"
+                    />
                   </n-tab-pane>
 
                   <n-tab-pane name="watermark-panel">
@@ -106,12 +154,16 @@
                         <span class="font-medium text-sm truncate sm:hidden">水印</span>
                       </div>
                     </template>
-                    <WatermarkPanel :watermarkConfig="watermarkConfig" @update:watermarkConfig="
-                      (newWatermarkConfig) => {
-                        Object.assign(watermarkConfig, newWatermarkConfig);
-                        updateCanvas();
-                      }
-                    " @canvas-update="updateCanvas" />
+                    <WatermarkPanel
+                      :watermarkConfig="watermarkConfig"
+                      @update:watermarkConfig="
+                        (newWatermarkConfig) => {
+                          Object.assign(watermarkConfig, newWatermarkConfig);
+                          updateCanvas();
+                        }
+                      "
+                      @canvas-update="updateCanvas"
+                    />
                   </n-tab-pane>
 
                   <n-tab-pane name="export-panel">
@@ -122,18 +174,28 @@
                         <span class="font-medium text-sm truncate sm:hidden">导出</span>
                       </div>
                     </template>
-                    <ExportPanel :exportConfig="exportConfig" @update:exportConfig="
-                      (newExportConfig) => {
-                        Object.assign(exportConfig, newExportConfig);
-                      }
-                    " @export-image="exportImage" />
+                    <ExportPanel
+                      :exportConfig="exportConfig"
+                      @update:exportConfig="
+                        (newExportConfig) => {
+                          Object.assign(exportConfig, newExportConfig);
+                        }
+                      "
+                      @export-image="exportImage"
+                    />
                   </n-tab-pane>
                 </n-tabs>
               </n-gi>
               <!-- 预览区域 - 大屏幕右侧，小屏幕上方 -->
               <n-gi span="24 m:24 l:3" class="order-1 lg:order-2">
-                <DefaultTheme ref="defaultThemeRef" :backgroundConfig="backgroundConfig" :iconConfig="iconConfig"
-                  :titleConfig="titleConfig" :watermarkConfig="watermarkConfig" @canvas-update="onCanvasUpdate" />
+                <DefaultTheme
+                  ref="defaultThemeRef"
+                  :backgroundConfig="backgroundConfig"
+                  :iconConfig="iconConfig"
+                  :titleConfig="titleConfig"
+                  :watermarkConfig="watermarkConfig"
+                  @canvas-update="onCanvasUpdate"
+                />
               </n-gi>
             </n-grid>
           </div>
@@ -170,7 +232,20 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
 import { useHead } from "@unhead/vue";
-import { NGrid, NGi, NConfigProvider, darkTheme, NButton, NModal, createDiscreteApi, type GlobalTheme, NTabs, NTabPane, NMessageProvider } from "naive-ui";
+import { Analytics } from "@vercel/analytics/vue";
+import {
+  NGrid,
+  NGi,
+  NConfigProvider,
+  darkTheme,
+  NButton,
+  NModal,
+  createDiscreteApi,
+  type GlobalTheme,
+  NTabs,
+  NTabPane,
+  NMessageProvider,
+} from "naive-ui";
 import { ref, reactive, onMounted, nextTick } from "vue";
 
 import type { BackgroundConfig, IconConfig, TitleConfig, WatermarkConfig, ExportConfig } from "@/lib/type";
@@ -195,7 +270,7 @@ const isLoading = ref(true);
 const showResetConfirm = ref(false);
 
 // 创建独立的消息 API
-const { message } = createDiscreteApi(['message']);
+const { message } = createDiscreteApi(["message"]);
 
 // 站点信息
 const siteInfo = reactive({
@@ -319,7 +394,7 @@ const themeSelectorRef = ref<InstanceType<typeof ThemeSelector> | null>(null);
 // 定义主题配置类型
 interface ThemeConfig {
   background?: Partial<BackgroundConfig>;
-  icon?: Partial<Omit<IconConfig, 'svg'>>;
+  icon?: Partial<Omit<IconConfig, "svg">>;
   title?: Partial<TitleConfig>;
   watermark?: Partial<WatermarkConfig>;
 }
@@ -336,18 +411,18 @@ const loadIcon = async () => {
     try {
       // 从 Iconify API 获取 SVG
       fetch(`https://api.iconify.design/${iconConfig.code}.svg`)
-        .then(response => {
+        .then((response) => {
           if (response.ok) {
             return response.text();
           } else {
             return "";
           }
         })
-        .then(svg => {
+        .then((svg) => {
           iconConfig.svg = svg;
           resolve();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("加载图标失败:", error);
           iconConfig.svg = "";
           resolve();
@@ -430,7 +505,7 @@ const applyTheme = (themeConfig: ThemeConfig) => {
   if (themeConfig.background) {
     Object.assign(backgroundConfig, themeConfig.background);
     // 如果是图片背景且有图片，需要重新加载图片对象
-    if (backgroundConfig.type === 'image' && backgroundConfig.image) {
+    if (backgroundConfig.type === "image" && backgroundConfig.image) {
       const img = new Image();
       img.onload = () => {
         backgroundConfig.imageObj = img;
@@ -462,7 +537,7 @@ const applyTheme = (themeConfig: ThemeConfig) => {
   // 更新画布
   nextTick(() => {
     updateCanvas();
-    message.success('主题应用成功');
+    message.success("主题应用成功");
   });
 };
 
@@ -478,15 +553,17 @@ const checkFontsLoaded = async () => {
     }
 
     // 使用FontFaceObserver检查字体加载
-    if ('FontFace' in window) {
+    if ("FontFace" in window) {
       // 如果浏览器支持FontFace API，使用document.fonts.ready
-      document.fonts.ready.then(() => {
-        resolve();
-      }).catch(() => {
-        // 即使字体加载失败，也继续初始化应用
-        console.warn('字体加载失败，使用后备字体');
-        resolve();
-      });
+      document.fonts.ready
+        .then(() => {
+          resolve();
+        })
+        .catch(() => {
+          // 即使字体加载失败，也继续初始化应用
+          console.warn("字体加载失败，使用后备字体");
+          resolve();
+        });
     } else {
       // 如果不支持，直接继续
       resolve();
@@ -498,14 +575,14 @@ const checkFontsLoaded = async () => {
 const initializeApp = async () => {
   try {
     // 模拟一些初始化时间，确保加载动画能够显示
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // 并行加载资源
     await Promise.all([
       // 加载初始图标
       iconConfig.code ? loadIcon() : Promise.resolve(),
       // 检查字体加载
-      checkFontsLoaded()
+      checkFontsLoaded(),
     ]);
 
     // 所有资源加载完成后，添加短暂延迟以完成加载动画
@@ -518,7 +595,7 @@ const initializeApp = async () => {
       });
     }, 500);
   } catch (error) {
-    console.error('初始化应用失败:', error);
+    console.error("初始化应用失败:", error);
     // 即使出错，也隐藏加载动画并尝试初始化
     setTimeout(() => {
       isLoading.value = false;
@@ -537,14 +614,14 @@ const saveCurrentConfig = () => {
       background: { ...backgroundConfig },
       icon: {
         ...iconConfig,
-        svg: undefined // 不保存SVG内容，避免存储过大
+        svg: undefined, // 不保存SVG内容，避免存储过大
       },
       title: { ...titleConfig },
       watermark: { ...watermarkConfig },
       export: { ...exportConfig },
-      theme: isDarkMode.value ? 'dark' : 'light',
+      theme: isDarkMode.value ? "dark" : "light",
       // 保存当前主题ID，如果有的话
-      themeId: themeSelectorRef.value?.selectedThemeId || 'default'
+      themeId: themeSelectorRef.value?.selectedThemeId || "default",
     };
 
     // 移除图片对象引用，因为它不能被序列化
@@ -553,20 +630,20 @@ const saveCurrentConfig = () => {
     }
 
     // 保存到本地存储
-    localStorage.setItem('cover-magic-config', JSON.stringify(config));
+    localStorage.setItem("cover-magic-config", JSON.stringify(config));
 
     // 显示成功消息
-    message.success('配置已保存');
+    message.success("配置已保存");
   } catch (error) {
-    console.error('保存配置失败:', error);
-    message.error('保存配置失败');
+    console.error("保存配置失败:", error);
+    message.error("保存配置失败");
   }
 };
 
 // 加载保存的配置
 const loadSavedConfig = () => {
   try {
-    const savedConfig = localStorage.getItem('cover-magic-config');
+    const savedConfig = localStorage.getItem("cover-magic-config");
     if (savedConfig) {
       const config = JSON.parse(savedConfig);
 
@@ -610,7 +687,7 @@ const loadSavedConfig = () => {
 
       // 恢复主题
       if (config.theme) {
-        const isDark = config.theme === 'dark';
+        const isDark = config.theme === "dark";
         isDarkMode.value = isDark;
         theme.value = isDark ? darkTheme : null;
       }
@@ -630,8 +707,8 @@ const loadSavedConfig = () => {
       });
     }
   } catch (error) {
-    console.error('加载配置失败:', error);
-    message.error('加载配置失败');
+    console.error("加载配置失败:", error);
+    message.error("加载配置失败");
   }
 };
 
@@ -730,21 +807,21 @@ const resetAllConfig = () => {
     showResetConfirm.value = false;
 
     // 显示成功消息
-    message.success('已重置所有配置');
+    message.success("已重置所有配置");
   } catch (error) {
-    console.error('重置配置失败:', error);
-    message.error('重置配置失败');
+    console.error("重置配置失败:", error);
+    message.error("重置配置失败");
   }
 };
 
 // 组件挂载时初始化
 onMounted(() => {
   // 如果页面已经加载完成，直接初始化应用
-  if (document.readyState === 'complete') {
+  if (document.readyState === "complete") {
     initializeApp();
   } else {
     // 否则等待页面资源加载完成
-    window.addEventListener('load', initializeApp);
+    window.addEventListener("load", initializeApp);
   }
 
   // 加载保存的配置
