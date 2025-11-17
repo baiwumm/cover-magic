@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.4.8](https://github.com/baiwumm/cover-magic/compare/1.4.7...1.4.8) (2025-11-17)
+
 ## [1.4.7](https://github.com/baiwumm/cover-magic/compare/1.4.6...1.4.7) (2025-11-17)
 
 ### ✨ Features | 新功能
