@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.7](https://github.com/baiwumm/cover-magic/compare/1.4.6...1.4.7) (2025-11-17)
+
+### ✨ Features | 新功能
+
+* 新增 Vercel 统计代码 ([c0a1fb0](https://github.com/baiwumm/cover-magic/commit/c0a1fb098536aae556b103315c1a4b36618ad4ef))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **ExportPanel:** 修复导出平台没有保持选中的问题 ([f6eecd2](https://github.com/baiwumm/cover-magic/commit/f6eecd2d8ba248df96b9d3684eed3a219ba79c78))
+
 ## [1.4.6](https://github.com/baiwumm/cover-magic/compare/1.4.5...1.4.6) (2025-08-11)
 
 ### ✨ Features | 新功能
