@@ -183,6 +183,11 @@ export interface FitTextOptions {
   maxHeightPx?: number
   lineHeight: number
   maxLines?: number
+  /**
+   * 超宽自动缩字号（R-8）：true 时行数上限 = 段落数（每个 \n 段一行），
+   * 放不下优先缩字号而非自动换行；缩到下限仍放不下才回退换行 → 省略号。
+   */
+  autoFit?: boolean
   /** 给定字号下单行文本宽度（px） */
   measure: (text: string, fontPx: number) => number
   /** 缩字号下限（相对初始字号），默认 0.5 */
@@ -211,6 +216,7 @@ export function fitTextBlock(opts: FitTextOptions): FitTextResult {
 
   const effMaxLines = (scale: number): number => {
     if (opts.maxLines !== undefined) return opts.maxLines
+    if (opts.autoFit) return Math.max(1, text.split("\n").length)
     if (opts.maxHeightPx !== undefined) {
       return Math.max(
         1,

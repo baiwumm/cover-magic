@@ -222,6 +222,35 @@ describe("fitTextBlock", () => {
     expect(r.ellipsis).toBe(false)
   })
 
+  it("autoFit=true：超宽段落优先缩字号保持单行，而不是换行", () => {
+    const m = makeMeasure()
+    const r = fitTextBlock({
+      text: "一二三四五六七",
+      fontPx: 100,
+      maxWidthPx: 500,
+      lineHeight: 1.25,
+      autoFit: true,
+      measure: m,
+    })
+    expect(r.lines).toEqual(["一二三四五六七"])
+    expect(r.scale).toBeLessThan(1)
+    expect(r.ellipsis).toBe(false)
+  })
+
+  it("autoFit=false：超宽段落自由换行，不缩字号", () => {
+    const m = makeMeasure()
+    const r = fitTextBlock({
+      text: "一二三四五六七",
+      fontPx: 100,
+      maxWidthPx: 500,
+      lineHeight: 1.25,
+      autoFit: false,
+      measure: m,
+    })
+    expect(r.lines.length).toBeGreaterThan(1)
+    expect(r.scale).toBe(1)
+  })
+
   it("缩字号以保持完整内容优先于省略号", () => {
     const m = makeMeasure()
     const text = "长标题需要缩小字号才能放下的场景验证"

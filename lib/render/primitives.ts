@@ -108,7 +108,7 @@ interface PreparedText {
 export function prepareText(
   rc: RenderContext,
   style: TextStyle,
-  block: Pick<TextBlock, "text">,
+  block: Pick<TextBlock, "text" | "autoFit">,
   maxWidthPct: number,
 ): PreparedText {
   const { ctx, width, scale } = rc
@@ -119,6 +119,7 @@ export function prepareText(
     fontPx: style.size,
     maxWidthPx: blockWidthBase,
     lineHeight: style.lineHeight,
+    autoFit: block.autoFit,
     measure: (t, fontPx) => {
       applyFont(ctx, style, fontPx * scale)
       return ctx.measureText(t).width
