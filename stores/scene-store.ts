@@ -6,10 +6,17 @@
 import { produce } from "immer"
 import { temporal } from "zundo"
 import { create } from "zustand"
+import { getDefaultTemplate } from "@/data/templates"
 import { createDefaultScene, type Scene } from "@/lib/scene"
 
 /** 撤销/重做上限（R-25 / D-25） */
 export const HISTORY_LIMIT = 50
+
+/** D-20：进入编辑器的初始状态 = 套用精选默认模板（不是空白 Scene） */
+function createInitialScene(): Scene {
+  const t = getDefaultTemplate()
+  return t ? structuredClone(t.scene) : createDefaultScene()
+}
 
 interface SceneActions {
   /** immer 风格草稿更新：updater 就地修改 draft */
@@ -25,7 +32,7 @@ export type SceneStore = SceneActions & { scene: Scene }
 export const useSceneStore = create<SceneStore>()(
   temporal(
     (set) => ({
-      scene: createDefaultScene(),
+      scene: createInitialScene(),
       setScene: (updater) =>
         set((state) => ({ scene: produce(state.scene, updater) })),
       replaceScene: (scene) => set({ scene }),

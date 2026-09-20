@@ -7,6 +7,7 @@
 import { Download, Moon, Redo2, Sun, Undo2 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
+import { TemplateDrawer } from "@/components/editor/template-drawer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -115,7 +116,8 @@ export function TopBar({ onOpenExport }: TopBarProps) {
         </span>
       </div>
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2">
+        <TemplateDrawer />
         <Button
           variant="ghost"
           size="icon"
