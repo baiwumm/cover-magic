@@ -104,6 +104,7 @@ export function BackgroundPanel() {
         <>
           <AssetDropzone
             label="拖拽背景图，或点击选择"
+            downsample
             onDataUrl={(dataUrl) =>
               setScene((draft) => {
                 if (draft.background.kind === "image")

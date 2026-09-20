@@ -1,7 +1,8 @@
 "use client"
 
-import { Download, Loader2 } from "lucide-react"
+import { ClipboardCopy, Download, Loader2 } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 import { SelectField } from "@/components/controls/select-field"
 import { SliderField } from "@/components/controls/slider-field"
 import { Button } from "@/components/ui/button"
@@ -16,8 +17,8 @@ import {
 import { useSceneStore } from "@/stores/scene-store"
 
 /**
- * 导出面板：目标尺寸 + 格式 + 质量（PNG 时质量禁用，5.3）。
- * 剪贴板 / 预估体积在 Phase 5 补齐。
+ * 导出面板（5.1-5.4）：目标尺寸 + 格式 + 质量（PNG 时禁用）
+ * + 预估体积 + 复制到剪贴板（仅 PNG，失败降级提示）。
  */
 export function ExportPanel() {
   const scene = useSceneStore((s) => s.scene)
@@ -25,6 +26,12 @@ export function ExportPanel() {
   const [quality, setQuality] = useState(0.92)
   const [filename, setFilename] = useState("")
   const [busy, setBusy] = useState(false)
+  const [estimate, setEstimate] = useState<string | null>(null)
+
+  const fmtBytes = (n: number) =>
+    n >= 1024 * 1024
+      ? `${(n / 1024 / 1024).toFixed(1)} MB`
+      : `${Math.round(n / 1024)} KB`
 
   const doExport = async () => {
     setBusy(true)
@@ -35,6 +42,38 @@ export function ExportPanel() {
         blob,
         name.endsWith(`.${format}`) ? name : `${name}.${format}`,
       )
+      setEstimate(fmtBytes(blob.size))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const estimateSize = async () => {
+    setBusy(true)
+    try {
+      const blob = await exportSceneToBlob(scene, format, quality)
+      setEstimate(fmtBytes(blob.size))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const copyToClipboard = async () => {
+    setBusy(true)
+    try {
+      const blob = await exportSceneToBlob(scene, "png")
+      // 5.2：ClipboardItem 仅支持 PNG；失败时降级提示
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ])
+      toast.success("已复制到剪贴板", {
+        description: "可直接粘贴到公众号后台等编辑器。",
+      })
+    } catch {
+      toast.error("复制失败", {
+        description:
+          "当前浏览器或环境不支持剪贴板图片，请使用「导出图片」下载后上传。",
+      })
     } finally {
       setBusy(false)
     }
@@ -46,6 +85,7 @@ export function ExportPanel() {
         <ItemContent>
           <ItemTitle className="text-xs">
             目标尺寸：{scene.exportSize.width} × {scene.exportSize.height} px
+            {estimate ? ` · 预估体积：${estimate}` : ""}
           </ItemTitle>
         </ItemContent>
       </Item>
@@ -80,18 +120,40 @@ export function ExportPanel() {
           className="h-8 text-xs"
         />
       </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={() => void doExport()}
+          disabled={busy}
+        >
+          {busy ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Download className="size-3.5" />
+          )}
+          导出图片
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5"
+          onClick={() => void copyToClipboard()}
+          disabled={busy || format !== "png"}
+          title={format !== "png" ? "剪贴板仅支持 PNG，请切换格式" : undefined}
+        >
+          <ClipboardCopy className="size-3.5" />
+          复制到剪贴板
+        </Button>
+      </div>
       <Button
         size="sm"
-        className="h-8 gap-1.5"
-        onClick={() => void doExport()}
+        variant="ghost"
+        className="h-7 text-xs"
+        onClick={() => void estimateSize()}
         disabled={busy}
       >
-        {busy ? (
-          <Loader2 className="size-3.5 animate-spin" />
-        ) : (
-          <Download className="size-3.5" />
-        )}
-        导出图片
+        刷新预估体积
       </Button>
     </div>
   )

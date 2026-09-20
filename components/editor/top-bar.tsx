@@ -4,7 +4,7 @@
  * 顶栏（2.5/2.7）：平台预设 / 尺寸（解锁输入，R-21）/ 撤销重做 / 深浅色 / 导出入口。
  */
 
-import { Download, Moon, Redo2, Sun, Undo2 } from "lucide-react"
+import { Download, Link2, Moon, Redo2, Sun, Undo2 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { toast } from "sonner"
 import { TemplateDrawer } from "@/components/editor/template-drawer"
@@ -22,6 +22,7 @@ import {
 import type { PlatformGroup } from "@/lib/platforms"
 import { GROUP_LABELS, getPreset, PLATFORM_PRESETS } from "@/lib/platforms"
 import { useHistoryControls } from "@/lib/storage/history"
+import { encodeSceneToHash } from "@/lib/storage/share-url"
 import { useSceneStore } from "@/stores/scene-store"
 
 interface TopBarProps {
@@ -147,6 +148,33 @@ export function TopBar({ onOpenExport }: TopBarProps) {
           ) : (
             <Moon className="size-4" />
           )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="复制分享链接"
+          title="复制分享链接"
+          onClick={() => {
+            void (async () => {
+              const hash = await encodeSceneToHash(
+                useSceneStore.getState().scene,
+              )
+              const url = `${window.location.origin}/editor/#${hash}`
+              try {
+                await navigator.clipboard.writeText(url)
+                toast.success("链接已复制", {
+                  description:
+                    "在浏览器打开即可还原当前设计（无需登录与上传）。",
+                })
+              } catch {
+                toast.error("复制失败", {
+                  description: "请检查浏览器剪贴板权限。",
+                })
+              }
+            })()
+          }}
+        >
+          <Link2 className="size-4" />
         </Button>
         <Button size="sm" className="h-8 gap-1.5" onClick={onOpenExport}>
           <Download className="size-3.5" />
