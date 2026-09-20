@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# 字体子集化中间产物（含 140MB 源字体包，绝不能提交）
+.font-build/
+
+# Next.js / Cloudflare（Phase 0 起生效）
+.next/
+out/
+.wrangler/
+.dev.vars
+.env*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
