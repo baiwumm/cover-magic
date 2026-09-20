@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/.vscode"]
+    "includes": ["**", "!**/.vscode", "!**/next-env.d.ts"]
   },
   "css": {
     "parser": {
