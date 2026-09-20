@@ -9,8 +9,10 @@ import { useEffect } from "react"
 import { EditorShell } from "@/components/editor/editor-shell"
 import { ensureFontLoaded } from "@/lib/fonts"
 import { drawScene } from "@/lib/render/draw-scene"
+import { computeSceneRects, hitTest } from "@/lib/render/element-rects"
 import { preloadSceneAssets } from "@/lib/render/icons"
 import { createDefaultScene } from "@/lib/scene"
+import { useSceneStore } from "@/stores/scene-store"
 
 if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
   ;(window as unknown as Record<string, unknown>).__coverMagic = {
@@ -18,6 +20,9 @@ if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
     preloadSceneAssets,
     ensureFontLoaded,
     createDefaultScene,
+    computeSceneRects,
+    hitTest,
+    getScene: () => useSceneStore.getState().scene,
   }
 }
 

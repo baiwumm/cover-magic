@@ -6,6 +6,7 @@ import {
   pointInRect,
   pxToPct,
   rectCenterPct,
+  snapBlock,
 } from "./geometry"
 
 describe("pct ↔ px", () => {
@@ -63,5 +64,34 @@ describe("blockRect（中心锚点 → 左上角，含边距补偿）", () => {
     expect(pointInRect(r.x, r.y, r)).toBe(true)
     expect(pointInRect(100, 100, r)).toBe(false)
     expect(pointInRect(r.x + r.width, r.y + r.height, r)).toBe(true)
+  })
+})
+
+describe("snapBlock（吸附 + 参考线）", () => {
+  it("中线吸附：x 接近 50 时吸附并出竖参考线", () => {
+    const r = snapBlock({ x: 49.8, y: 40 }, { w: 30, h: 10 }, { x: 1, y: 1 })
+    expect(r.xPct).toBe(50)
+    expect(r.guides).toContainEqual({ axis: "x", positionPct: 50 })
+    expect(r.yPct).toBe(40)
+  })
+
+  it("安全区边线：块左缘贴近 5% 安全线时贴线", () => {
+    // 块宽 20，左缘在 5 → 中心在 15
+    const r = snapBlock({ x: 14.6, y: 50 }, { w: 20, h: 10 }, { x: 1, y: 1 })
+    expect(r.xPct).toBe(15)
+    expect(r.guides).toContainEqual({ axis: "x", positionPct: 5 })
+  })
+
+  it("超出容差不吸附，无参考线", () => {
+    const r = snapBlock({ x: 30, y: 30 }, { w: 20, h: 10 }, { x: 1, y: 1 })
+    expect(r.xPct).toBe(30)
+    expect(r.yPct).toBe(30)
+    expect(r.guides).toEqual([])
+  })
+
+  it("y 轴横线吸附", () => {
+    const r = snapBlock({ x: 50, y: 95.2 }, { w: 20, h: 10 }, { x: 1, y: 1 })
+    expect(r.yPct).toBe(95)
+    expect(r.guides).toContainEqual({ axis: "y", positionPct: 95 })
   })
 })

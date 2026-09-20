@@ -68,3 +68,65 @@ export function pointInRect(px: number, py: number, rect: Rect): boolean {
     py <= rect.y + rect.height
   )
 }
+
+/** 安全区边距（画布百分比）：四边各 5% */
+export const SAFE_AREA_PCT = 5
+
+export interface SnapGuide {
+  /** 参考线方向：x = 竖线，y = 横线 */
+  axis: "x" | "y"
+  /** 参考线在画布上的百分比位置 */
+  positionPct: number
+}
+
+export interface SnapResult {
+  xPct: number
+  yPct: number
+  guides: SnapGuide[]
+}
+
+/**
+ * 吸附（3.4）：中线（50）与四边安全区，容差按「基准 px」换算的百分比传入。
+ * 返回吸附后的块中心百分比与需显示的参考线。
+ */
+export function snapBlock(
+  centerPct: { x: number; y: number },
+  blockSizePct: { w: number; h: number },
+  tolerancePct: { x: number; y: number },
+): SnapResult {
+  const guides: SnapGuide[] = []
+  const snapAxis = (
+    center: number,
+    sizePct: number,
+    tol: number,
+    axis: "x" | "y",
+  ): number => {
+    // 目标：画布中线 + 安全区两边（支持块边缘贴线）
+    const lines = [
+      { at: 50, edge: false },
+      { at: SAFE_AREA_PCT, edge: true },
+      { at: 100 - SAFE_AREA_PCT, edge: true },
+    ]
+    let best: { value: number; guide: number; dist: number } | null = null
+    for (const line of lines) {
+      const values = line.edge
+        ? [line.at, line.at + sizePct / 2, line.at - sizePct / 2]
+        : [line.at]
+      for (const value of values) {
+        const dist = Math.abs(center - value)
+        if (dist <= tol && (!best || dist < best.dist)) {
+          best = { value, guide: line.at, dist }
+        }
+      }
+    }
+    if (best) {
+      guides.push({ axis, positionPct: best.guide })
+      return best.value
+    }
+    return center
+  }
+
+  const xPct = snapAxis(centerPct.x, blockSizePct.w, tolerancePct.x, "x")
+  const yPct = snapAxis(centerPct.y, blockSizePct.h, tolerancePct.y, "y")
+  return { xPct, yPct, guides }
+}

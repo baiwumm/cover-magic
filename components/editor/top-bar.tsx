@@ -6,6 +6,7 @@
 
 import { Download, Moon, Redo2, Sun, Undo2 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -36,12 +37,22 @@ export function TopBar({ onOpenExport }: TopBarProps) {
     const preset = getPreset(id)
     if (!preset) return
     if (preset.id === "custom") return
+    const ratioChanged =
+      preset.width !== scene.exportSize.width ||
+      preset.height !== scene.exportSize.height
     // R-21：只填入推荐值，不锁死宽高输入
     setScene((draft) => {
       draft.presetId = preset.id
       draft.ratio = { w: preset.width, h: preset.height }
       draft.exportSize = { width: preset.width, height: preset.height }
     })
+    // 3.6：比例变化提示，autoFit 兜底
+    if (ratioChanged) {
+      toast("比例已切换", {
+        description:
+          "排版可能出现偏移，开启「超宽自动缩字号」的元素会自动适配。",
+      })
+    }
   }
 
   const setExportSize = (width: number, height: number) => {
