@@ -2,39 +2,26 @@
 
 import { ArrowRight, Github, Sparkles } from "lucide-react"
 import Link from "next/link"
-import { LightRays } from "@/components/background/light-ray"
 import { Button } from "@/components/ui/button"
 import { siteConfig } from "@/constants/site"
 import { TextGenerateEffect } from "./text-generate-effect"
 
 /**
  * Hero（6.3 / D-15）：徽章 → 主标题 → 副文案 → 双按钮 → 产品截图。
- * 背景为 ogl 光束（6.1）。
+ * ogl 光束背景已上移到 app/page.tsx 作为整页固定层。
  */
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 h-[560px] opacity-60 dark:opacity-40">
-        <LightRays
-          raysOrigin="top-center"
-          raysColor="#8ab4ff"
-          raysSpeed={0.8}
-          lightSpread={0.9}
-          rayLength={2.4}
-          followMouse
-          mouseInfluence={0.08}
-          noiseAmount={0.05}
-        />
-      </div>
-
+    <section className="relative">
       <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 pt-36 pb-16 text-center">
         <span className="flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <Sparkles className="size-3.5" />
           免费开源 · 纯浏览器内渲染 · 无需注册
         </span>
 
-        <h1 className="text-5xl font-bold leading-tight tracking-tight md:text-7xl">
-          <TextGenerateEffect words="为每一篇文章" />{" "}
+        {/* 两行分排：Maple Mono CN 比系统字体宽，md:text-7xl 下连排会在「封/面」处断行 */}
+        <h1 className="flex flex-col gap-1 text-5xl font-bold leading-tight tracking-tight md:text-7xl">
+          <TextGenerateEffect words="为每一篇文章" />
           <TextGenerateEffect
             words="配一张好封面"
             charClassName="bg-gradient-to-r from-blue-500 via-sky-400 to-indigo-400 bg-clip-text text-transparent"

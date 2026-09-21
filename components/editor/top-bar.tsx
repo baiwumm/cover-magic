@@ -4,10 +4,10 @@
  * 顶栏（2.5/2.7）：平台预设 / 尺寸（解锁输入，R-21）/ 撤销重做 / 深浅色 / 导出入口。
  */
 
-import { Download, Link2, Moon, Redo2, Sun, Undo2 } from "lucide-react"
-import { useTheme } from "next-themes"
+import { Download, Link2, Redo2, Undo2 } from "lucide-react"
 import { toast } from "sonner"
 import { TemplateDrawer } from "@/components/editor/template-drawer"
+import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -33,7 +33,6 @@ export function TopBar({ onOpenExport }: TopBarProps) {
   const scene = useSceneStore((s) => s.scene)
   const setScene = useSceneStore((s) => s.setScene)
   const { undo, redo, canUndo, canRedo } = useHistoryControls()
-  const { resolvedTheme, setTheme } = useTheme()
 
   const selectPreset = (id: string) => {
     const preset = getPreset(id)
@@ -137,15 +136,7 @@ export function TopBar({ onOpenExport }: TopBarProps) {
         >
           <Redo2 className="size-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="切换深浅色"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-        >
-          <Sun className="size-4 hidden dark:block" />
-          <Moon className="size-4 dark:hidden" />
-        </Button>
+        <ThemeToggle />
         <Button
           variant="ghost"
           size="icon"

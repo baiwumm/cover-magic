@@ -52,6 +52,9 @@
 | D-31 | 每阶段一个可独立回滚的 commit；**`git push` 前必须确认** |
 | D-32 | 临时占位：品牌资产删除后用极简 SVG 占位（避免 favicon 404），用户后续替换 |
 | D-33 | ✅ **字体子集产出采用方案 A，已完成（2026-09-20）**：`scripts/fetch-fonts.sh` 生成 `public/fonts/{maple-mono-cn-regular,maple-mono-cn-bold}.woff2`（合计 3.5MB，码位 6893 完全对齐，advance width 两字重一致）。本机工具链 Python 3.12.10 / fontTools 4.63.0 / brotli / pyftsubset 可用 |
+| D-34 | **全站 UI 字体 = Maple Mono CN**（2026-09-21 用户追加）：`app/globals.css` 的 `:root { --font-sans-stack / --font-mono-stack }` + `@theme inline { --font-sans / --font-mono }`，`body` 挂 `font-sans`。与封面渲染同族，落地页 / 编辑器 / 封面三处观感统一 |
+| D-35 | **字体 preload 上移到根布局**（D-34 的直接后果，**偏离 R-15 的「仅 /editor preload」**）：全站 UI 都要用它，且落地页本来就会为模板缩略图下载这两个 woff2，preload 只是提前发起、不增加字节。AGENTS.md R-15 原文待用户确认后同步修订 |
+| D-36 | **落地页光束改整页固定背景 + 主题切换接 `theme-switch-animation`**（2026-09-21 用户追加，参考 `E:\personal-project\theme-switch-animation\apps\docs`）：`LightRays` 挂在 `app/page.tsx` 作 `fixed inset-0 -z-10`（根容器 `relative isolate`）；新增 `components/theme/theme-toggle.tsx`，以**受控模式**（`isDark` + `onChange`）接 next-themes——class 与 localStorage 仍归 next-themes，库只管 View Transition 动画。navbar 与编辑器顶栏共用该按钮 |
 
 ---
 
@@ -63,7 +66,8 @@
 "tailwindcss": "^4", "@tailwindcss/postcss": "^4", "tw-animate-css": "^1",
 "class-variance-authority": "^0.7", "clsx": "^2.1", "tailwind-merge": "^3.4", "lucide-react": "^0.562",
 "next-themes": "^0.4", "zustand": "^5", "zundo": "^2", "immer": "^11",
-"motion": "^12", "ogl": "^1.0", "react-colorful": "^5.6", "react-dropzone": "^14"
+"motion": "^12", "ogl": "^1.0", "react-colorful": "^5.6", "react-dropzone": "^14",
+"theme-switch-animation": "^0.1"
 // devDependencies
 "typescript": "^5.9", "@types/node": "^24", "@types/react": "^19", "@types/react-dom": "^19",
 "@biomejs/biome": "^2.3", "vitest": "^3", "wrangler": "^4", "release-it": "^19", "@release-it/conventional-changelog": "^10"
@@ -438,7 +442,9 @@ export function drawScene(
 | 7.4 | 加 CSP 会与 Next 静态导出的内联脚本冲突 | 首版只加基础安全头，**不加 CSP** |
 | 7.5 | 中文文档来源显示各平台尺寸混乱（今日头条流传 4 套值、掘金无官方规范） | 见 §6 说明 + 预设可微调 + 不锁输入 |
 | 7.6 | `autoFit` 缩字号后可能与模板设计意图偏离，模板在小比例下变平庸 | Phase 4.6 遍历时检查四类比例；必要时给模板加 `ratioOverrides`（**属扩范围，先问**） |
-| 7.7 | 视觉测量环境无效会被误判成渲染 bug：后台标签页/隐藏容器里 `requestAnimationFrame` 不执行 → 画布假空白；自动化视口可能 `0×0` → 几何测量全错 | 遵守 AGENTS.md R-23：先确认页面前台可见、视口有真实尺寸，用 `browser-use` 量 `getBoundingClientRect` 再改（Phase 1.8 / 3 / 6 的验收都依赖这条） |
+| 7.7 | 视觉测量环境无效会被误判成渲染 bug：后台标签页/隐藏容器里 `requestAnimationFrame` 不执行 → 画布假空白；自动化视口可能 `0×0` → 几何测量全错 | 遵守 AGENTS.md R-23：先确认页面前台可见、视口有真实尺寸，用 `browser-use` 量 `getBoundingClientRect` 再改（Phase 1.8 / 3 / 6 的验收都依赖这条）。**已实测的兜底方案**：内置浏览器面板未打开时是 `viewport=0×0 / visible=false`，`take_screenshot` 直接抛 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`；此时自己起 `chrome --headless=new --remote-debugging-port` 用 CDP（Node 24 自带全局 `WebSocket`，零新依赖）驱动，可拿到真实 1440×900 视口 + 截图 + CLS + 下载。两个驱动坑：Radix Tabs 在 **mousedown** 才选中（`el.click()` 无效，必须发真实鼠标事件）、React 受控输入要用原型 value setter + `input` 事件，中文用 `Input.insertText` |
+| 7.11 | **`pnpm build` 会打断正在运行的 `next dev`**（两者共用 `.next/`，构建后 dev server 直接掉线，`curl` 连接被拒） | 验证前先确认 dev server 是否在跑；需要同时看产物与 dev 时**串行**执行，或给 build 用独立 `distDir`。表现很隐蔽：页面会渲染出一半的旧内容（HTML 流被截断），容易被误读成组件 bug |
+| 7.12 | 全站换成 Maple Mono CN 后，等宽中文字体比系统栈宽得多，原本能连排的大字号标题会换行、甚至把词拆断（实测 `text-7xl` 的 14 字主标题在 `max-w-5xl` 下从「封/面」处断开） | 大标题按语义**分行**写（`h1` 用 `flex flex-col`），不要依赖自动换行；新增大字号文案后量一次行首/行尾字符 |
 | 7.10 | 误装社区注册表取色器（`shadcn.io` 401 需付费、`originui` 路径跳文档页）或误用官方 `attachment`/`bubble`/`message`（这些是聊天 UI 件，不是文件选择器） | 只用官方注册表现成件（附录 A）+ `react-colorful` / `react-dropzone` 两个专门库 |
 | 7.8 | `zundo` + `immer` + `zustand` 在高频拖拽下会产生大量快照 | Phase 3.7 只在 `pointerup` 提交；必要时拖拽期间 `temporal` 暂停 |
 | 7.9 | 若某阶段发现需扩大范围（新依赖、动 Scene 语义、加图层） | **立即停下问用户**，不要顺手实现（AGENTS.md 范围红线） |

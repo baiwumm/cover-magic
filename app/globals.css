@@ -6,6 +6,13 @@
    shadcn 默认中性主题（R-19）：黑白灰 + OKLCH 变量，无彩色主色
    ============================================================ */
 :root {
+  /* 全站字体：Maple Mono CN（自托管 GB2312 子集），子集外字符回退系统字体栈 */
+  --font-sans-stack:
+    "Maple Mono CN", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono-stack:
+    "Maple Mono CN", ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas,
+    "Courier New", monospace;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -75,6 +82,8 @@
 }
 
 @theme inline {
+  --font-sans: var(--font-sans-stack);
+  --font-mono: var(--font-mono-stack);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -124,7 +133,7 @@
 /* ============================================================
    自托管字体（R-15）：@font-face + public/fonts/*.woff2 子集
    族名 'Maple Mono CN'，400/700 两字重（R-7 真字重的前提）。
-   仅在 /editor 页 preload（见 app/editor/layout.tsx）。
+   全站 UI 与封面渲染共用，两个页面都在 app/layout.tsx 里 preload。
    ============================================================ */
 @font-face {
   font-family: "Maple Mono CN";
