@@ -2,7 +2,7 @@
 
 > **本文件是自包含的执行输入。** 在新窗口打开项目时，只需说「按 `docs/implementation-plan.md` 从 Phase N 开始执行」即可接手，不依赖任何历史对话。
 > 配套阅读顺序：`AGENTS.md`（约束，自动加载）→ 本文件（任务）→ `docs/requirements.md`（背景与证据）。
-> 状态：Phase 0–8 全部待执行。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
+> 状态：**Phase 0–6 已完成并提交**（Phase 6 于 2026-09-21 过质量门），Phase 7–8 待执行。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
 
 ---
 
@@ -192,15 +192,15 @@ export function drawScene(
 ### Phase 0 · 仓库清理与脚手架
 **目标**：得到空的 Next.js + shadcn 骨架，旧代码归零。
 
-- [ ] 0.1 删除 v1 文件：`src/`、`index.html`、`vite.config.ts`、`tsconfig.app.json`、`tsconfig.node.json`、`eslint.config.js`、`.eslintignore`、`pnpm-lock.yaml`、`public/` 下的 v1 品牌资产（`favicon*`、`logo.svg`、`apple-touch-icon.png`、`site.webmanifest`、`web-app-manifest-*.png`）。⚠️ **`public/fonts/` 必须保留** —— 里面的两个 woff2 已按 Phase 1.4a 生成完毕
-- [ ] 0.2 `git rm --cached .env` 并删除该文件（当前**被 git 追踪**，必须停止追踪）；`.gitignore` 加 `.env*`、`.next/`、`out/`、`.wrangler/`、`.dev.vars`、`.font-build/`
-- [ ] 0.3 保留：`LICENSE`、`CHANGELOG.md`、`AGENTS.md`、`docs/`、`.release-it.json`、`.vscode/extensions.json`
-- [ ] 0.4 `pnpm dlx create-next-app@latest` 初始化（App Router、TS、Tailwind v4、Biome、`@/*` 别名），或手写等价配置；合并进根目录
-- [ ] 0.5 `next.config.ts`：`output: 'export'`、`images: { unoptimized: true }`、`trailingSlash: true`（**对 Workers 路由友好，见 8.3**）
-- [ ] 0.6 `npx shadcn@latest init`（中性主题、OKLCH、cssVariables）
-- [ ] 0.7 `components/controls/` 目录占位 + `constants/site.ts` 建骨架（含 ICP `粤ICP备2023007649号` / 公安 `粤公网安备44030402006402号` / GitHub / 博客 / 邮箱）
-- [ ] 0.8 `package.json`：`scripts` 配齐（`dev`/`build`=`next build`+`next export` 或单 `next build`、`start`、`lint`、`test`、`deploy`=`wrangler deploy --dry-run`），`version` 置 `2.0.0`，移除全部 Vue 依赖
-- [ ] 0.9 临时占位 `public/favicon.svg` + `public/placeholder.svg`（D-32）
+- [x] 0.1 删除 v1 文件：`src/`、`index.html`、`vite.config.ts`、`tsconfig.app.json`、`tsconfig.node.json`、`eslint.config.js`、`.eslintignore`、`pnpm-lock.yaml`、`public/` 下的 v1 品牌资产（`favicon*`、`logo.svg`、`apple-touch-icon.png`、`site.webmanifest`、`web-app-manifest-*.png`）。⚠️ **`public/fonts/` 必须保留** —— 里面的两个 woff2 已按 Phase 1.4a 生成完毕
+- [x] 0.2 `git rm --cached .env` 并删除该文件（当前**被 git 追踪**，必须停止追踪）；`.gitignore` 加 `.env*`、`.next/`、`out/`、`.wrangler/`、`.dev.vars`、`.font-build/`
+- [x] 0.3 保留：`LICENSE`、`CHANGELOG.md`、`AGENTS.md`、`docs/`、`.release-it.json`、`.vscode/extensions.json`
+- [x] 0.4 `pnpm dlx create-next-app@latest` 初始化（App Router、TS、Tailwind v4、Biome、`@/*` 别名），或手写等价配置；合并进根目录
+- [x] 0.5 `next.config.ts`：`output: 'export'`、`images: { unoptimized: true }`、`trailingSlash: true`（**对 Workers 路由友好，见 8.3**）
+- [x] 0.6 `npx shadcn@latest init`（中性主题、OKLCH、cssVariables）
+- [x] 0.7 `components/controls/` 目录占位 + `constants/site.ts` 建骨架（含 ICP `粤ICP备2023007649号` / 公安 `粤公网安备44030402006402号` / GitHub / 博客 / 邮箱）
+- [x] 0.8 `package.json`：`scripts` 配齐（`dev`/`build`=`next build`+`next export` 或单 `next build`、`start`、`lint`、`test`、`deploy`=`wrangler deploy --dry-run`），`version` 置 `2.0.0`，移除全部 Vue 依赖
+- [x] 0.9 临时占位 `public/favicon.svg` + `public/placeholder.svg`（D-32）
 
 **验收**：`pnpm build` 产出 `out/`；`pnpm lint`、`pnpm test` 均通过（此时无测试用例也应退出 0）；`pnpm dev` 打开是 shadcn 默认页且深浅色可切；`git status` 无 `.env`、无 `src/`。
 **commit**：`chore: 重构为 Next.js + shadcn 骨架，删除 Vue v1 代码`
@@ -211,10 +211,10 @@ export function drawScene(
 ### Phase 1 · 渲染内核（本计划的地基，后续阶段全部依赖）
 **目标**：`drawScene` 单点可用，预览=导出=缩略图三处同源。
 
-- [ ] 1.1 `lib/scene.ts`：Scene 类型 + `createDefaultScene()`（R-10）
-- [ ] 1.2 `lib/geometry.ts`：百分比 ↔ 像素换算（含边距补偿），vitest 覆盖
-- [ ] 1.3 `lib/text/wrap.ts`：CJK 禁则断行 + `autoFit` 降级（R-8），vitest 覆盖 ≥12 用例：纯中文/纯英文/中英混排/引号行尾/括号行首/超长无空格串/`\n` 与自动换行混用
-- [ ] 1.4 `lib/fonts.ts` + `app/globals.css` 的 `@font-face`：regular 直接复制 better-admin 产物；Bold 按 1.4a 生成；`preloadFonts()` 用 `document.fonts.load()` 预热
+- [x] 1.1 `lib/scene.ts`：Scene 类型 + `createDefaultScene()`（R-10）
+- [x] 1.2 `lib/geometry.ts`：百分比 ↔ 像素换算（含边距补偿），vitest 覆盖
+- [x] 1.3 `lib/text/wrap.ts`：CJK 禁则断行 + `autoFit` 降级（R-8），vitest 覆盖 ≥12 用例：纯中文/纯英文/中英混排/引号行尾/括号行首/超长无空格串/`\n` 与自动换行混用
+- [x] 1.4 `lib/fonts.ts` + `app/globals.css` 的 `@font-face`：regular 直接复制 better-admin 产物；Bold 按 1.4a 生成；`preloadFonts()` 用 `document.fonts.load()` 预热
 - [x] 1.4a ✅ **已完成（2026-09-20）：字体产物已入库，新窗口无需重跑**
 
   - 产物：`public/fonts/maple-mono-cn-regular.woff2`（1,772,496 B）+ `maple-mono-cn-bold.woff2`（1,724,892 B），合计 3.5 MB
@@ -267,10 +267,10 @@ export function drawScene(
   - 产物 `maple-mono-cn-regular.woff2` + `maple-mono-cn-bold.woff2` 一起放进 `public/fonts/`；`app/globals.css` 写两条 `@font-face`（同族名 `'Maple Mono CN'`，`font-weight: 400` / `700`，`unicode-range` 与 `font-display` **照抄 better-admin 那份 CSS**）。
   - 把上面脚本原样存为 `scripts/fetch-fonts.sh`（或在 `.font-build/` 留 README 说明产出方式），便于日后重新生成。
   - 体积预期：regular 1.77MB + bold 约同量 ≈ 3.5MB，远低于 Workers 单文件 25MiB（R-16）。
-- [ ] 1.5 `lib/render/primitives.ts`：背景（色/渐变/图 cover-contain-blur-overlay）+ 图标（R-5 同源路径 + `revokeObjectURL`）+ 文本块（R-7 真字重）+ 水印透明度
-- [ ] 1.6 `lib/render/draw-scene.ts`：组合原语，`scale = height/1080`（R-3），顺序 background→logo→title→subtitle→watermark
-- [ ] 1.7 最小验证页 `app/editor/page.tsx`：一个 canvas + 一个 JSON textarea。手改 JSON 即可驱动全部渲染路径
-- [ ] 1.8 **一致性质检（本阶段核心验收）**：同一 Scene 在 1920×1080 预览 与 1242×1660 导出之间，构图相对位置目视一致；字号/字重/颜色零差异（R-24）
+- [x] 1.5 `lib/render/primitives.ts`：背景（色/渐变/图 cover-contain-blur-overlay）+ 图标（R-5 同源路径 + `revokeObjectURL`）+ 文本块（R-7 真字重）+ 水印透明度
+- [x] 1.6 `lib/render/draw-scene.ts`：组合原语，`scale = height/1080`（R-3），顺序 background→logo→title→subtitle→watermark
+- [x] 1.7 最小验证页 `app/editor/page.tsx`：一个 canvas + 一个 JSON textarea。手改 JSON 即可驱动全部渲染路径
+- [x] 1.8 **一致性质检（本阶段核心验收）**：同一 Scene 在 1920×1080 预览 与 1242×1660 导出之间，构图相对位置目视一致；字号/字重/颜色零差异（R-24）
 
 **验收**：`pnpm test` 中 `wrap.ts`/`geometry.ts` 全绿；导出 3 种比例 PNG，肉眼比对无 B-01 类错位；预览与导出图 diff 无字重差（消灭 B-02）；拖动 textarea 数值后立刻导出，位置与看到的一致（消灭 B-03）。
 **commit**：`feat: 落地单一 Canvas 渲染内核与 CJK 断行引擎`
@@ -281,16 +281,16 @@ export function drawScene(
 ### Phase 2 · 编辑器外壳与控件层
 **目标**：三栏布局 + 全部参数可通过控件修改。
 
-- [ ] 2.1 `pnpm add zustand zundo immer`；`lib/storage/history.ts` 用 `zundo` 包 temporal 中间件（上限 50，R-25）
-- [ ] 2.2 `stores/scene-store.ts`：Scene 单一数据源 + `set*` 原子 action（**不镜像 props，消灭 B-11**）
-- [ ] 2.3 `lib/platforms.ts`：14 档预设（见 §6 表），`group` 字段
-- [ ] 2.4 `components/controls/`：`color-field`（react-colorful + shadcn Popover，含 40 色板 + hex 输入）、`slider-field`（shadcn Slider + 数值显示 + 单位）、`switch-field`、`select-field`、`textarea-field`、`font-select`（shadcn `combobox` = Popover+Command，**不要手写下拉**）、`asset-dropzone`（`react-dropzone` + shadcn `Item`）
+- [x] 2.1 `pnpm add zustand zundo immer`；`lib/storage/history.ts` 用 `zundo` 包 temporal 中间件（上限 50，R-25）
+- [x] 2.2 `stores/scene-store.ts`：Scene 单一数据源 + `set*` 原子 action（**不镜像 props，消灭 B-11**）
+- [x] 2.3 `lib/platforms.ts`：14 档预设（见 §6 表），`group` 字段
+- [x] 2.4 `components/controls/`：`color-field`（react-colorful + shadcn Popover，含 40 色板 + hex 输入）、`slider-field`（shadcn Slider + 数值显示 + 单位）、`switch-field`、`select-field`、`textarea-field`、`font-select`（shadcn `combobox` = Popover+Command，**不要手写下拉**）、`asset-dropzone`（`react-dropzone` + shadcn `Item`）
       → 先按附录 A 一次性 `npx shadcn@latest add` 装齐现成件，再写 controls 封装
-- [ ] 2.4b 消息提示用 shadcn `sonner`（替代 v1 Naive 的 `createDiscreteApi`/`useMessage`）；全局 Toast 挂在 layout
-- [ ] 2.5 `components/editor/editor-shell.tsx` + `top-bar.tsx` + `panels/*`：6 个 Tabs（背景/图标/主标题/副标题/水印/导出）。位置类参数**本阶段先留空**（Phase 3 用拖拽交付，符合 R-20）
-- [ ] 2.6 `canvas-stage.tsx`：外层用 shadcn `resizable` 分隔工具栏与画布、画布容器用 shadcn `aspect-ratio` 跟随 `scene.ratio`；只读渲染 + 棋盘格衬底
-- [ ] 2.7 深浅色：`next-themes` 接入，`attribute="class"`，顶部 toggle（**消灭 B-05：全项目只有一处主题状态**）
-- [ ] 2.8 应用模板 = 整体替换 Scene 的动作先建好（供 Phase 4 复用），禁止增量合并（R-11）
+- [x] 2.4b 消息提示用 shadcn `sonner`（替代 v1 Naive 的 `createDiscreteApi`/`useMessage`）；全局 Toast 挂在 layout
+- [x] 2.5 `components/editor/editor-shell.tsx` + `top-bar.tsx` + `panels/*`：6 个 Tabs（背景/图标/主标题/副标题/水印/导出）。位置类参数**本阶段先留空**（Phase 3 用拖拽交付，符合 R-20）
+- [x] 2.6 `canvas-stage.tsx`：外层用 shadcn `resizable` 分隔工具栏与画布、画布容器用 shadcn `aspect-ratio` 跟随 `scene.ratio`；只读渲染 + 棋盘格衬底
+- [x] 2.7 深浅色：`next-themes` 接入，`attribute="class"`，顶部 toggle（**消灭 B-05：全项目只有一处主题状态**）
+- [x] 2.8 应用模板 = 整体替换 Scene 的动作先建好（供 Phase 4 复用），禁止增量合并（R-11）
 
 **验收**：改任一参数 → 画布即时更新；撤销/重做 50 步不回退过头；导出文件名/格式/质量生效；`next build` 无 hydration 警告。
 **commit**：`feat: 编辑器三栏外壳与控件层`
@@ -299,13 +299,13 @@ export function drawScene(
 ---
 
 ### Phase 3 · 画布直接操作（本次便捷性收益最大的一块）
-- [ ] 3.1 命中检测：`lib/geometry.ts` 增 `hitTest(scene, point)`（文本块用换行后的实际外框，非近似宽度）
-- [ ] 3.2 拖拽：指针事件（Pointer Events，非 mouse）拖动实时改 `x/y`，`pointerdown` 时捕获
-- [ ] 3.3 选中态：描边 + 块包围盒 + 尺寸手柄（仅 logo 缩放）
-- [ ] 3.4 吸附：中线（x=50/y=50）、四边安全区、容差 4px（基准 px）；吸附时显示参考线
-- [ ] 3.5 键盘：方向键微调 1（`Shift` ×10）、`Delete` 清除当前槽位、`Tab` 循环选中元素
-- [ ] 3.6 平台预设切换 → **画布比例立即跟随**（R-4），并弹出「比例变化可能导致排版偏移，是否自动适配」提示（`autoFit` 兜底）
-- [ ] 3.7 拖拽结束时才提交进 history（避免每一步 drag 产生 50 条记录）
+- [x] 3.1 命中检测：`lib/geometry.ts` 增 `hitTest(scene, point)`（文本块用换行后的实际外框，非近似宽度）
+- [x] 3.2 拖拽：指针事件（Pointer Events，非 mouse）拖动实时改 `x/y`，`pointerdown` 时捕获
+- [x] 3.3 选中态：描边 + 块包围盒 + 尺寸手柄（仅 logo 缩放）
+- [x] 3.4 吸附：中线（x=50/y=50）、四边安全区、容差 4px（基准 px）；吸附时显示参考线
+- [x] 3.5 键盘：方向键微调 1（`Shift` ×10）、`Delete` 清除当前槽位、`Tab` 循环选中元素
+- [x] 3.6 平台预设切换 → **画布比例立即跟随**（R-4），并弹出「比例变化可能导致排版偏移，是否自动适配」提示（`autoFit` 兜底）
+- [x] 3.7 拖拽结束时才提交进 history（避免每一步 drag 产生 50 条记录）
 
 **验收**：拖动三个文本块与 logo 均落点准确；导出结果与拖拽后的预览逐像素一致（R-24）；撤销一次拖拽 = 回到拖拽前，而非拖拽中间态。
 **commit**：`feat: 画布拖拽定位、吸附参考线与键盘微调`
@@ -314,12 +314,12 @@ export function drawScene(
 ---
 
 ### Phase 4 · 模板系统（高颜值的主交付物）
-- [ ] 4.1 `data/templates.ts`：8–12 套，覆盖 16:9 / 2.35:1 / 3:4 / 1:1 四类比例，每套标注 `bestRatio`
-- [ ] 4.2 模板缩略图：运行时离屏 `drawScene` → 320×180 → `toDataURL`，`useMemo` + Map 缓存（**无构建步骤**）
-- [ ] 4.3 `template-drawer.tsx`：分组 + 缩略图网格 + 点击整体套用（2.8 的动作）
-- [ ] 4.4 落地页 `template-gallery.tsx` 复用同一份数据与同一渲染器
-- [ ] 4.5 进入 `/editor` 默认套用 `templateId: 'default'`（D-20）
-- [ ] 4.6 模板自检脚本/测试：遍历模板断言每个都是合法 Scene、文字不溢出画布、无子集外字符（若 7.1 决定做字符校验）
+- [x] 4.1 `data/templates.ts`：8–12 套，覆盖 16:9 / 2.35:1 / 3:4 / 1:1 四类比例，每套标注 `bestRatio`
+- [x] 4.2 模板缩略图：运行时离屏 `drawScene` → 320×180 → `toDataURL`，`useMemo` + Map 缓存（**无构建步骤**）
+- [x] 4.3 `template-drawer.tsx`：分组 + 缩略图网格 + 点击整体套用（2.8 的动作）
+- [x] 4.4 落地页 `template-gallery.tsx` 复用同一份数据与同一渲染器
+- [x] 4.5 进入 `/editor` 默认套用 `templateId: 'default'`（D-20）
+- [x] 4.6 模板自检脚本/测试：遍历模板断言每个都是合法 Scene、文字不溢出画布、无子集外字符（若 7.1 决定做字符校验）
 
 **验收**：套任意模板后画布无溢出/无遮挡；缩略图与实际效果一致（同源渲染保证）；换比例时 `autoFit` 生效不溢出。
 **commit**：`feat: 数据驱动的模板系统与实时缩略图`
@@ -328,15 +328,15 @@ export function drawScene(
 ---
 
 ### Phase 5 · 导出与持久化
-- [ ] 5.1 `lib/render/export.ts`：`canvas.toBlob()` + `createObjectURL` + `revokeObjectURL`（替代 v1 `toDataURL`）
-- [ ] 5.2 复制到剪贴板（`ClipboardItem`，仅 PNG），失败时降级提示
-- [ ] 5.3 文件名：标题 slug + 时间戳；PNG 时质量控件自动禁用（消灭 v1 无效控件）
-- [ ] 5.4 导出前显示「目标尺寸 + 格式 + 预估体积」
-- [ ] 5.5 `lib/storage/autosave.ts`：debounce 400ms 写 `cover-magic:scene:v2`；启动读取并**校验 version，非法即 fallback 默认模板**（不做 v1 迁移，D-28）
-- [ ] 5.6 图片上传降采样：`createImageBitmap` → OffscreenCanvas 长边 ≤1920 → WebP q0.82 → dataURL；>800KB 提示（R-16）
-- [ ] 5.7 Iconify 面板：`lib/iconify.ts` 搜索 + 300ms 防抖 + `AbortController` + Map 缓存（**消灭 B-09**）；精选集合优先展示
-- [ ] 5.8 重置 = `createDefaultScene()`；`lib/storage/share-url.ts` 写 hash 序列化 Scene（R-13），顶栏「复制链接」
-- [ ] 5.9 （P2，可砍）同 Scene 批量导出全部平台尺寸
+- [x] 5.1 `lib/render/export.ts`：`canvas.toBlob()` + `createObjectURL` + `revokeObjectURL`（替代 v1 `toDataURL`）
+- [x] 5.2 复制到剪贴板（`ClipboardItem`，仅 PNG），失败时降级提示
+- [x] 5.3 文件名：标题 slug + 时间戳；PNG 时质量控件自动禁用（消灭 v1 无效控件）
+- [x] 5.4 导出前显示「目标尺寸 + 格式 + 预估体积」
+- [x] 5.5 `lib/storage/autosave.ts`：debounce 400ms 写 `cover-magic:scene:v2`；启动读取并**校验 version，非法即 fallback 默认模板**（不做 v1 迁移，D-28）
+- [x] 5.6 图片上传降采样：`createImageBitmap` → OffscreenCanvas 长边 ≤1920 → WebP q0.82 → dataURL；>800KB 提示（R-16）
+- [x] 5.7 Iconify 面板：`lib/iconify.ts` 搜索 + 300ms 防抖 + `AbortController` + Map 缓存（**消灭 B-09**）；精选集合优先展示
+- [x] 5.8 重置 = `createDefaultScene()`；`lib/storage/share-url.ts` 写 hash 序列化 Scene（R-13），顶栏「复制链接」
+- [x] 5.9 （P2，可砍）同 Scene 批量导出全部平台尺寸
 
 **验收**：导出 4K 不 OOM；剪贴板粘贴到公众号后台可用；刷新后状态完整恢复；上传 5MB 图不撑爆 localStorage；粘贴分享链接到无痕窗口能完整还原画面。
 **commit**：`feat: 导出、自动保存、图标搜索与分享链接`
@@ -345,15 +345,24 @@ export function drawScene(
 ---
 
 ### Phase 6 · 落地页（颜值交付）
-- [ ] 6.1 移植 `components/background/light-ray.tsx`（ogl，参考 `E:\personal-project\ogimg`，469 行）+ `BlurText` + `TextGenerateEffect` + `text-scramble`
-- [ ] 6.2 `navbar.tsx`：固定顶部 pill、`backdrop-blur-xl`、Logo + 深浅色 + 「开始设计」
-- [ ] 6.3 `hero.tsx`：徽章 pill → 主标题（`BlurText`，`text-5xl md:text-7xl`）→ 副文案 → **双按钮**（主：`开始设计` + `ArrowRight`，`asChild` 包 `Link href="/editor"`；次：`Star on GitHub` 描边 pill）→ 产品截图（虚线描边 + 大投影）
-- [ ] 6.4 `features.tsx` 3 卡（虚线边框 + 图标装饰）承接 v1 `HeaderPanel` 的文案资产；`steps.tsx` 三步；`faq.tsx`；`cta.tsx`
-- [ ] 6.5 `footer.tsx`：备案（`beian.miit.gov.cn` / `beian.mps.gov.cn` 链接）+ 社交 + 版权，全部读 `constants/site.ts`
-- [ ] 6.6 产品截图：用 Phase 4 的模板导出一张真实成品图（预压缩 AVIF/WebP，R-14）
-- [ ] 6.7 `app/not-found.tsx`；`export` 静态产物无服务端警告
+- [x] 6.1 移植 `components/background/light-ray.tsx`（ogl，参考 `E:\personal-project\ogimg`，469 行）+ `BlurText` + `TextGenerateEffect` + `text-scramble`
+      → 实际只落了 light-ray + `text-generate-effect`。**`BlurText` / `text-scramble` 未移植**：Hero 主标题已用逐字入场，再叠模糊/乱码入场是负收益。需要时可单独加。
+- [x] 6.2 `navbar.tsx`：固定顶部 pill、`backdrop-blur-xl`、Logo + 深浅色 + 「开始设计」
+- [x] 6.3 `hero.tsx`：徽章 pill → 主标题（`BlurText`，`text-5xl md:text-7xl`）→ 副文案 → **双按钮**（主：`开始设计` + `ArrowRight`，`asChild` 包 `Link href="/editor"`；次：`Star on GitHub` 描边 pill）→ 产品截图（虚线描边 + 大投影）
+- [x] 6.4 `features.tsx` 3 卡（虚线边框 + 图标装饰）承接 v1 `HeaderPanel` 的文案资产；`steps.tsx` 三步；`faq.tsx`；`cta.tsx`
+- [x] 6.5 `footer.tsx`：备案（`beian.miit.gov.cn` / `beian.mps.gov.cn` 链接）+ 社交 + 版权，全部读 `constants/site.ts`
+- [x] 6.6 产品截图：用 Phase 4 的模板导出一张真实成品图（预压缩 AVIF/WebP，R-14）
+- [x] 6.7 `app/not-found.tsx`；`export` 静态产物无服务端警告
 
 **验收**：真实浏览器（`browser-use`，视口 1440×900）走完 落地页 → 点「开始设计」→ `/editor` → 改字 → 导出，无报错、无布局跳动、深浅色均正常（R-23）。
+**验收记录（2026-09-21，headless Chrome + CDP，视口 1440×900，dev 与 `out/` 静态产物各跑一遍）**：
+- 落地页浅/深：CLS **0**、控制台 0 报错、8 张运行时缩略图全部生成、Hero 成品图非空、`document.fonts` 已加载。
+- 链路：点「开始设计」→ `/editor/` 渲染成功（画布 64 色非空白）；改主标题 → 画布哈希变化；撤销/重做按钮 → 画布哈希可复现地回到 `c999239d`；刷新 → autosave 恢复标题与画布。
+- 修掉的 3 个真缺陷：
+  1. `showcase.webp` 是一张**全透明**图（上次导出时画布未绘制，R-23 那个坑）→ 走应用自身导出路径重做为 1800×766 / 15.8KB；
+  2. 主题切换按钮按 `resolvedTheme` 分支渲染图标 → SSR 与客户端首帧不一致触发 **hydration 报错**，改为两个图标都在、`dark:` 变体切换（navbar + `top-bar`）；
+  3. `TabsList` 被 `group-data-horizontal/tabs:h-8` 锁成 32px，6 个 Tabs 排两行时溢出到面板上，**副标题/水印/导出三个标签被遮挡且点不到**（连 JS `.click()` 都无效）→ 用同 modifier 覆盖高度，实测 6 个标签 `elementFromPoint` 全部命中自己。
+- 附带：指向 `/editor` 的 `Link` 加 `prefetch={false}`（静态导出下 RSC 预取路径与产物不一致，每次加载必然 404）。
 **commit**：`feat: 落地页 Hero 与模板展示`
 **禁止**：不做 SEO 元数据优化、不做多语言、不做博客/文档页。
 
@@ -361,9 +370,10 @@ export function drawScene(
 
 ### Phase 7 · 移动端策略与打磨
 - [ ] 7.1 `mobile-gate.tsx`：`/editor` 窄视口/触屏 → 「请在 PC 端使用」卡（含复制桌面链接），不做响应式编辑器
-- [ ] 7.2 快捷键面板（`?` 呼出）；焦点管理与 `aria-label`
+- [ ] 7.2 快捷键面板（`?` 呼出）；焦点管理与 `aria-label`。**当前代码里没有任何 `ctrlKey/metaKey` 处理** → `Ctrl+Z` / `Ctrl+Shift+Z` 撤销重做需一并补（现在只有顶栏按钮，且焦点在输入框时应让位于原生撤销）
 - [ ] 7.3 空/错误态：Iconify 加载失败、字体不可用、上传格式错误
 - [ ] 7.4 首屏性能：字体仅 `/editor` preload；`out/` 体积核查（R-16）
+      → 实测遗留两点：① `/editor` 首屏 **CLS ≈ 0.10**（357ms 面板组重新分配宽度 0.054 + 484ms 画布容器从 340×190 撑到 1114×497 0.046），落地页为 0；② Chrome 报「preload 的字体几秒内未被使用」告警——字体只进 canvas、UI 文本不用它，属该启发式的误报，确认是否保留 preload 时再定。
 - [ ] 7.5 逐条回归 `docs/requirements.md` §3 的 B-01…B-13，在 §3 表格旁标注「已修」
 
 **commit**：`feat: 移动端提示、快捷键与异常态`

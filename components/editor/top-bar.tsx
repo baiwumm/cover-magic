@@ -143,11 +143,8 @@ export function TopBar({ onOpenExport }: TopBarProps) {
           aria-label="切换深浅色"
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
         >
-          {resolvedTheme === "dark" ? (
-            <Sun className="size-4" />
-          ) : (
-            <Moon className="size-4" />
-          )}
+          <Sun className="size-4 hidden dark:block" />
+          <Moon className="size-4 dark:hidden" />
         </Button>
         <Button
           variant="ghost"

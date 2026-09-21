@@ -124,7 +124,7 @@
 /* ============================================================
    自托管字体（R-15）：@font-face + public/fonts/*.woff2 子集
    族名 'Maple Mono CN'，400/700 两字重（R-7 真字重的前提）。
-   仅在 /editor 页 preload（见 app/editor/page.tsx）。
+   仅在 /editor 页 preload（见 app/editor/layout.tsx）。
    ============================================================ */
 @font-face {
   font-family: "Maple Mono CN";

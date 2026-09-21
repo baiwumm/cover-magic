@@ -44,7 +44,9 @@ export function EditorShell() {
             onValueChange={setTab}
             className="flex h-full flex-col gap-0"
           >
-            <TabsList className="mx-2 mt-2 grid h-auto w-auto grid-cols-3 gap-1">
+            {/* group-data-horizontal/tabs:h-8 是带 variant 前缀的高度，裸 h-auto 覆盖不掉，
+                两行标签会被压进 32px 并溢出到面板上（第二行点不到）*/}
+            <TabsList className="mx-2 mt-2 grid h-auto w-auto grid-cols-3 gap-1 group-data-horizontal/tabs:h-auto">
               {TABS.map((t) => (
                 <TabsTrigger key={t.value} value={t.value} className="text-xs">
                   {t.label}
