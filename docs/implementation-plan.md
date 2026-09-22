@@ -2,7 +2,7 @@
 
 > **本文件是自包含的执行输入。** 在新窗口打开项目时，只需说「按 `docs/implementation-plan.md` 从 Phase N 开始执行」即可接手，不依赖任何历史对话。
 > 配套阅读顺序：`AGENTS.md`（约束，自动加载）→ 本文件（任务）→ `docs/requirements.md`（背景与证据）。
-> 状态：**Phase 0–6 已完成并提交**（Phase 6 于 2026-09-21 过质量门），Phase 7–8 待执行。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
+> 状态：**Phase 0–7 已完成并提交**（Phase 6 于 2026-09-21 过质量门；Phase 7 审查修复批次于 2026-09-22 提交 `3c53fad`），**Phase 8.1–8.5 已完成待提交**，8.6 release 待用户明确指令。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
 
 ---
 
@@ -376,20 +376,26 @@ export function drawScene(
 - [x] 7.1 `mobile-gate.tsx`：`/editor` 窄视口/触屏 → 「请在 PC 端使用」卡（含复制桌面链接），不做响应式编辑器（2026-09-22 已实现：`components/editor/mobile-gate.tsx` + `app/editor/page.tsx` 分支）
 - [x] 7.2 快捷键面板（`?` 呼出）；焦点管理与 `aria-label`。`Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y` 已在 `lib/storage/history.ts`（输入框内让位原生）；`components/editor/help-dialog.tsx` + 顶栏按钮（2026-09-22）
 - [x] 7.3 空/错误态：Iconify 离线/无结果分流、上传格式与体积校验、导出失败 catch、autosave 配额 toast、分享解码失败提示（并入审查修复批次，2026-09-22）
-- [ ] 7.4 首屏性能：字体仅 `/editor` preload；`out/` 体积核查（R-16）
-      → 实测遗留两点：① `/editor` 首屏 **CLS ≈ 0.10**（357ms 面板组重新分配宽度 0.054 + 484ms 画布容器从 340×190 撑到 1114×497 0.046），落地页为 0；② Chrome 报「preload 的字体几秒内未被使用」告警——字体只进 canvas、UI 文本不用它，属该启发式的误报，确认是否保留 preload 时再定。
-- [ ] 7.5 逐条回归 `docs/requirements.md` §3 的 B-01…B-13，在 §3 表格旁标注「已修」
+- [x] 7.4 首屏性能：字体在根布局 preload（D-35/R-15）；`out/` 体积核查（R-16）
+      → **2026-09-22 复测**：`/editor` CLS **0**（此前 0.10 已消）、FCP≈168ms、DCL≈148ms、`document.fonts=loaded`；`out/` 52 文件 / **5.09 MB**，最大单文件 **1.69 MB**（字体，限 25 MiB）、文件数远低于 20000。preload 字体告警属启发式误报（字只进 canvas），按 D-35 保留根布局 preload。
+- [x] 7.5 逐条回归 `docs/requirements.md` §3 的 B-01…B-13，在 §3 表格旁标注「已修」（2026-09-22，§3 已加「处理」列，13/13 闭环；禁项 grep：`html2canvas` / `next/font/google` / `strokeText` / v1 localStorage key / 统计代码 均 0 命中）
 
 **commit**：`feat: 移动端提示、快捷键与异常态`
 
 ---
 
 ### Phase 8 · 部署配置与发布
-- [ ] 8.1 `wrangler.jsonc`：`name`、`compatibility_date`、`assets.directory = "./out"`、`assets.binding`、`not_found_handling`（见 8.3 实测项）
-- [ ] 8.2 `public/_headers`：`/fonts/*` → `cache-control: public, max-age=31536000, immutable`；`/*.html` → `no-cache`；基础安全头 `x-content-type-options: nosniff`、`referrer-policy: strict-origin-when-cross-origin`、`permissions-policy`（**不加 CSP**，见 7.4 风险）
-- [ ] 8.3 **实测项**：`trailingSlash: true` 与 Workers Assets 的 URL 规范化组合，确认 `/editor` 命中 `editor.html` 且不 404、404 页正确。本地 `wrangler dev` 验证即可，**不 deploy**（R-17）
-- [ ] 8.4 `README.md` 重写（新栈、截图、本地开发、部署说明、badge 更新）
-- [ ] 8.5 `docs/requirements.md` 的 §8 决策表标注最终结论；本文件状态更新
+- [x] 8.1 `wrangler.jsonc`：`name`、`compatibility_date`、`assets.directory = "./out"`、`not_found_handling = "404-page"`（纯静态无 Worker 脚本，故不配 `binding`/`main`）
+- [x] 8.2 `public/_headers`：`/fonts/*` 与 `/_next/static/*` → `immutable`；`/` `/editor/` `/404/` → `no-cache`；基础安全头（**不加 CSP**）。⚠️ 实测 `/*.html` 对 trailingSlash 目录式 URL 不命中，HTML 规则按实际路径写
+- [x] 8.3 **实测通过（2026-09-22，`wrangler dev --port 8787 --local`，wrangler 4.135.0）**：
+  - `/` → 200 `no-cache`；`/editor/` → 200 `no-cache`；`/editor` → 200（规范化后命中 `editor/`）
+  - 字体 / `_next/static/*` → 200 `public, max-age=31536000, immutable`
+  - `/definitely-missing` → **404**，body 为 `not-found.tsx` 中文 404 页
+  - 全路径 `X-Content-Type-Options: nosniff` + Referrer-Policy + Permissions-Policy
+  - 解析日志：`Parsed 4 valid header rules`（改后为 6 条规则路径）
+  - **未执行** `wrangler deploy`（R-17）
+- [x] 8.4 `README.md` 重写（新栈、截图占位可后补、本地开发、部署说明、badge 更新）
+- [x] 8.5 `docs/requirements.md` §3 已加「处理」列（7.5）；本文件状态行已更新
 - [ ] 8.6 `release-it` 走 `2.0.0` —— **需用户明确指令后再执行，且 push/tag 单独确认**
 
 **commit**：`build: 接入 Cloudflare Workers 静态托管配置`

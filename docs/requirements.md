@@ -127,21 +127,23 @@
 
 ## 3. 现存缺陷清单（重构必须一并解决）
 
-| ID | 缺陷 | 证据 | 影响 |
-|---|---|---|---|
-| B-01 | **预览与导出比例不一致**：预览位图恒为 1920×1080，导出按目标平台重绘，且字号只按 `宽/1920` 单轴缩放，Y 位置按导出高度百分比计算 | `DefaultTheme.vue:3`、`:974, 1062, 1120, 1155` | 选微信公众号（2.35:1）或简书（1.25:1）时，导出结果与预览完全不同 —— 破坏了工具的核心承诺「所见即所得」，**最高优先级** |
-| B-02 | **导出字重比预览细一半**：预览标题描边 `size*2*0.01`，导出为 `titleSize*0.01`（换算回预览单位即 `size*0.01`） | `DefaultTheme.vue:677, 686` vs `:1136, 1145` | 两份复制代码已发生漂移的直接证据 |
-| B-03 | **导出取值与预览不同源**：预览读弹簧中间态 `animationStates.*.value`，导出读 `props.*` 目标值；动画未结束时导出会错位 | `DefaultTheme.vue:381-399` vs `:979-1005` | 拖动滑块后立即导出 → 位置与看到的不符 |
-| B-04 | 主题里渐变方向写成 `'to-bottom-right'`，与常量 `'to bottom right'` 不匹配，永远落到 `default` 分支；方向下拉框显示为空值 | `ThemeSelector.vue:88,131,174,217,260,303` vs `constant.ts:14` | 换主题后方向设置丢失 |
-| B-05 | `inject('isDarkMode')` 无对应 `provide`，主题弹窗深浅色判断恒走兜底分支；深色模式不持久化，与 HeaderPanel 内部状态各持一份 | `ThemeSelector.vue:51-58`、全项目无 `provide(` | 深色模式下弹窗样式错乱 |
-| B-06 | 背景 `opacity` 语义无效：`getContext('2d',{alpha:false})` + 先铺白底，透明度只让背景发灰 | `DefaultTheme.vue:418-437` | 无效控件 |
-| B-07 | `forest-green` 主题 `opacity: 200`（超出 0-100） | `ThemeSelector.vue:213` | 数据未校验 |
-| B-08 | 上传的自定义图标只存在组件内 `ref` 与未持久化的 `svg` 字段，刷新即丢 | `IconPanel.vue:500, 588-617` + `App.vue:614-616`（保存时剔除 svg） | 功能不可用 |
-| B-09 | 图标代码输入框每次 `input` 都发一次 Iconify 请求，无防抖、无竞态取消 | `IconPanel.vue:368-369`、`App.vue:411` | 连续输入产生乱序响应，图标闪烁/错配 |
-| B-10 | 主题应用是 `Object.assign` 增量合并，未被主题覆盖的字段保留旧值（`blur`、`image` 等） | `App.vue:501-540` | 「应用主题」结果不可预期 |
-| B-11 | `ExportPanel` 维护 `localExportConfig` 本地副本 + `watch` 双向回填父级，父子状态各一份 | `ExportPanel.vue:247-330` | 同步逻辑复杂，历史已出过「平台选择不保持」的 bug（commit `f6eecd2`） |
-| B-12 | `html2canvas` 声明为依赖但全项目零引用 | `package.json` + 全量 grep | 白占 ~44KB gzip |
-| B-13 | 顶部卡片、加载进度、`handleHeaderAction` 等存在「看起来能用其实没接线」的空操作 UI | `App.vue:481-485`、`LoadingScreen.vue:789-796` | 拉低可信度 |
+> **v2 处理结果（2026-09-22 标注）**：B-01/B-02/B-03 必须「已修」；其余逐条见「处理」列。DoD §5.2 要求的 13 条均已闭环。
+
+| ID | 缺陷 | 证据 | 影响 | 处理 |
+|---|---|---|---|---|
+| B-01 | **预览与导出比例不一致**：预览位图恒为 1920×1080，导出按目标平台重绘，且字号只按 `宽/1920` 单轴缩放，Y 位置按导出高度百分比计算 | `DefaultTheme.vue:3`、`:974, 1062, 1120, 1155` | 选微信公众号（2.35:1）或简书（1.25:1）时，导出结果与预览完全不同 —— 破坏了工具的核心承诺「所见即所得」，**最高优先级** | **已修**：单一 `drawScene` + `scene.ratio` 驱动预览（R-1/R-4），`exportSize` 只影响导出分辨率 |
+| B-02 | **导出字重比预览细一半**：预览标题描边 `size*2*0.01`，导出为 `titleSize*0.01`（换算回预览单位即 `size*0.01`） | `DefaultTheme.vue:677, 686` vs `:1136, 1145` | 两份复制代码已发生漂移的直接证据 | **已修**：删除 `strokeText` 伪加粗，`@font-face` 400/700 真字重（R-7/D-14） |
+| B-03 | **导出取值与预览不同源**：预览读弹簧中间态 `animationStates.*.value`，导出读 `props.*` 目标值；动画未结束时导出会错位 | `DefaultTheme.vue:381-399` vs `:979-1005` | 拖动滑块后立即导出 → 位置与看到的不符 | **已修**：Scene 单一数据源，渲染管线无弹簧/补间（R-2） |
+| B-04 | 主题里渐变方向写成 `'to-bottom-right'`，与常量 `'to bottom right'` 不匹配，永远落到 `default` 分支；方向下拉框显示为空值 | `ThemeSelector.vue:88,131,174,217,260,303` vs `constant.ts:14` | 换主题后方向设置丢失 | **已修**：v2 渐变为连续 `angle: 0-360`，无字符串枚举；模板整体替换（R-11） |
+| B-05 | `inject('isDarkMode')` 无对应 `provide`，主题弹窗深浅色判断恒走兜底分支；深色模式不持久化，与 HeaderPanel 内部状态各持一份 | `ThemeSelector.vue:51-58`、全项目无 `provide(` | 深色模式下弹窗样式错乱 | **已修**：`next-themes` 单一状态源（Phase 2.7） |
+| B-06 | 背景 `opacity` 语义无效：`getContext('2d',{alpha:false})` + 先铺白底，透明度只让背景发灰 | `DefaultTheme.vue:418-437` | 无效控件 | **已删**（D-01/R-20），改为图片背景 `overlay` 遮罩强度 |
+| B-07 | `forest-green` 主题 `opacity: 200`（超出 0-100） | `ThemeSelector.vue:213` | 数据未校验 | **已修**：`isLegalScene` 深校验 + 模板自检测试（Phase 4.6） |
+| B-08 | 上传的自定义图标只存在组件内 `ref` 与未持久化的 `svg` 字段，刷新即丢 | `IconPanel.vue:500, 588-617` + `App.vue:614-616`（保存时剔除 svg） | 功能不可用 | **已修**：上传图降采样 dataURL 进 Scene，autosave 持久化（Phase 5.6 / M-08） |
+| B-09 | 图标代码输入框每次 `input` 都发一次 Iconify 请求，无防抖、无竞态取消 | `IconPanel.vue:368-369`、`App.vue:411` | 连续输入产生乱序响应，图标闪烁/错配 | **已修**：300ms 防抖 + `AbortController` + Map 缓存（Phase 5.7） |
+| B-10 | 主题应用是 `Object.assign` 增量合并，未被主题覆盖的字段保留旧值（`blur`、`image` 等） | `App.vue:501-540` | 「应用主题」结果不可预期 | **已修**：套用模板 = 整体替换 Scene（R-11） |
+| B-11 | `ExportPanel` 维护 `localExportConfig` 本地副本 + `watch` 双向回填父级，父子状态各一份 | `ExportPanel.vue:247-330` | 同步逻辑复杂，历史已出过「平台选择不保持」的 bug（commit `f6eecd2`） | **已修**：Scene 单一 store + 原子 action，无面板镜像（Phase 2.2） |
+| B-12 | `html2canvas` 声明为依赖但全项目零引用 | `package.json` + 全量 grep | 白占 ~44KB gzip | **已删**：v2 依赖清单无此项（范围红线） |
+| B-13 | 顶部卡片、加载进度、`handleHeaderAction` 等存在「看起来能用其实没接线」的空操作 UI | `App.vue:481-485`、`LoadingScreen.vue:789-796` | 拉低可信度 | **已删**（D-03/D-04/D-05）：v2 无假进度、无空操作卡 |
 
 ---
 
@@ -364,7 +366,9 @@ type Scene = {
 | 追加 | 移动端 | 不做编辑器响应式，`/editor` 给「请在 PC 端使用」提示 |
 | 追加 | 语言 / 版本 | 纯中文；从 `2.0.0` 起，保留 release-it 流程 |
 
-> 完整决策编号 D-01…D-32、平台预设终值表、分阶段任务与验收标准见 `docs/implementation-plan.md`；工程约束见 `AGENTS.md`。
+> 完整决策编号 D-01…D-36、平台预设终值表、分阶段任务与验收标准见 `docs/implementation-plan.md`；工程约束见 `AGENTS.md`。
+>
+> **最终结论（2026-09-22）**：上表议题均按结论落地；Phase 0–7 已提交，Phase 8.1–8.5（wrangler 配置 / `_headers` / 本地路由实测 / README / 文档收口）已完成，8.6 `2.0.0` release 待用户指令。
 
 ---
 

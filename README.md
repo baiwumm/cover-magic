@@ -1,140 +1,132 @@
 <div align="center">
-  <img alt="Cover Magic Logo" src="./public/logo.svg" width="120"/>
-  <h1>Cover Magic - 专业的封面设计工具</h1>
-  <p><strong>一款专业的封面设计工具，支持实时预览和高质量导出，帮助您轻松创建精美的封面图像</strong></p>
-  
+  <img alt="Cover Magic Logo" src="./public/favicon.svg" width="96"/>
+  <h1>Cover Magic</h1>
+  <p><strong>中文友好的封面图设计工具：拖拽定位、中文断行、平台尺寸预设、实时预览与高清导出，全流程在浏览器完成。</strong></p>
+
   <p>
-  <img src="https://img.shields.io/github/stars/baiwumm/cover-magic?style=flat-square&logo=github" alt="GitHub stars"/>
-    <img src="https://img.shields.io/badge/Vue-v3.5.17-brightgreen" alt="Vue.js"/>
-    <img src="https://img.shields.io/badge/Vite-v7.0.4-yellow" alt="Vite.js"/>
-    <img src="https://img.shields.io/badge/Tailwind_CSS-4.1.11-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
-    <img src="https://img.shields.io/badge/License-MIT-green" alt="License MIT" />
+    <img src="https://img.shields.io/github/stars/baiwumm/cover-magic?style=flat-square&logo=github" alt="GitHub stars"/>
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js"/>
+    <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React"/>
+    <img src="https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
+    <img src="https://img.shields.io/badge/Cloudflare-Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white" alt="Cloudflare Workers"/>
+    <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT"/>
   </p>
 </div>
 
-## 🌟 功能特点
+## 功能特点
 
-### 🎨 背景设计
-- 自定义纯色背景
-- 上传自定义图片
-- 多方向渐变背景
-- 背景模糊效果调整
+- **所见即所得**：预览、导出、模板缩略图共用同一 Canvas 渲染器（`drawScene`）
+- **画布直接操作**：拖拽定位 + 吸附参考线 + 方向键微调（1px / Shift×10）
+- **中文排版**：CJK 禁则断行、多行文本、自适应字号（缩字号 → 减行 → 省略号）
+- **模板系统**：多套纯 JSON 模板，运行时离屏渲染缩略图，一键整体套用
+- **平台预设**：公众号 / 掘金 / 知乎 / 小红书 / B站 / X / YouTube 等 14 档，比例与像素分离
+- **导出**：PNG / WebP / JPEG、复制到剪贴板、体积预估、分享链接（URL hash，零后端）
+- **本地优先**：自动保存 `localStorage`，数据不出浏览器；撤销/重做 50 步
+- **图标**：Iconify 站内搜索（精选集合 + 全库）+ 本地图片上传（降采样）
 
-### 🖼️ 内容编辑
-- 丰富的图标库（基于Iconify）
-- 自定义标题文本
-- 字体样式调整（粗体、斜体、大写）
-- 水印保护功能
-
-### 🌓 主题模式
-- 多种精美主题
-- 一键主题切换
-- 个性化主题定制
-
-### 📤 导出选项
-- 多种格式导出（PNG、JPEG、WebP）
-- 自定义尺寸
-- 高质量图像
-- 随机文件名生成
-
-### 🛠️ 本地开发
+## 本地开发
 
 ```bash
-# 1. 克隆项目
+# 克隆
 git clone git@github.com:baiwumm/cover-magic.git
-
-# 2. 进入项目目录
 cd cover-magic
 
-# 3. 安装依赖
+# 安装依赖（pnpm）
 pnpm install
 
-# 4. 启动开发服务器
+# 开发
 pnpm dev
+# http://localhost:3000
 
-# 5. 打开浏览器访问
-# http://localhost:5173
+# 质量门
+pnpm lint
+pnpm test
+pnpm build   # 纯静态导出 → out/
 ```
 
-## 🛠️ 技术栈
+| 脚本 | 说明 |
+|---|---|
+| `pnpm dev` | Next.js 开发服务器 |
+| `pnpm build` | 静态导出到 `out/`（`output: 'export'`） |
+| `pnpm lint` | Biome 检查 |
+| `pnpm test` | Vitest（仅 `lib/` 纯函数） |
+| `pnpm deploy` | `wrangler deploy --dry-run`（本地校验配置，不触碰账号） |
+| `pnpm release` | release-it 发版（需明确指令） |
 
-- **前端框架**: [Vue 3](https://vuejs.org/)
-- **构建工具**: [Vite](https://vitejs.dev/)
-- **语言**: [TypeScript](https://www.typescriptlang.org/)
-- **UI组件库**: [Naive UI](https://www.naiveui.com/)
-- **CSS框架**: [TailwindCSS](https://tailwindcss.com/)
-- **图标库**: [Iconify](https://iconify.design/)
-- **图像处理**: [html2canvas](https://html2canvas.hertzen.com/)
+## 技术栈
 
-## 📝 项目结构
+| 层 | 选型 |
+|---|---|
+| 框架 | Next.js 16 App Router + React 19，`output: 'export'` |
+| 样式 | Tailwind CSS v4 + shadcn/ui（Radix）+ `next-themes` |
+| 状态 | zustand + zundo（撤销重做）+ immer |
+| 渲染 | 原生 Canvas 2D（**不用** html2canvas / DOM 转图） |
+| 字体 | `@font-face` + 仓库内 Maple Mono CN woff2 子集（400/700） |
+| 动效 | `motion`；落地页背景 `ogl` 光束 |
+| 检查 / 测试 | Biome · Vitest |
+| 部署 | Cloudflare Workers Static Assets（`wrangler.jsonc`） |
+
+## 项目结构
 
 ```
 cover-magic/
-├── public/             # 静态资源
-├── src/
-│   ├── components/     # 组件
-│   │   ├── BackgroundPanel.vue    # 背景设置面板
-│   │   ├── DefaultTheme.vue       # 默认主题组件
-│   │   ├── ExportPanel.vue        # 导出设置面板
-│   │   ├── FooterPanel.vue        # 底部版权组件
-│   │   ├── GithubCorner.vue       # GitHub角标组件
-│   │   ├── HeaderPanel.vue        # 顶部标题栏
-│   │   ├── IconPanel.vue          # 图标设置面板
-│   │   ├── LoadingScreen.vue      # 加载动画组件
-│   │   ├── ThemeSelector.vue      # 主题选择器组件
-│   │   ├── TitlePanel.vue         # 标题设置面板
-│   │   └── WatermarkPanel.vue     # 水印设置面板
-│   ├── lib/            # 工具库
-│   │   ├── constant.ts # 常量定义
-│   │   └── type.ts     # 类型定义
-│   ├── App.vue         # 应用入口组件
-│   └── main.ts         # 应用入口文件
-├── .env                # 环境变量
-├── index.html          # HTML模板
-├── package.json        # 项目配置
-├── tsconfig.json       # TypeScript配置
-└── vite.config.ts      # Vite配置
+├── app/
+│   ├── page.tsx              # 落地页 /
+│   ├── editor/page.tsx       # 制作页 /editor
+│   ├── layout.tsx            # 主题 + 字体 preload
+│   └── globals.css           # Tailwind v4 + shadcn OKLCH + @font-face
+├── components/
+│   ├── landing/              # Hero / 模板墙 / features / FAQ / footer
+│   ├── editor/               # 三栏外壳、画布、面板、模板抽屉
+│   ├── controls/             # UI 隔离层（取色、滑块、上传…）
+│   ├── ui/                   # shadcn 生成物
+│   └── theme/                # 主题切换（View Transition）
+├── lib/
+│   ├── scene.ts              # Scene 类型 + 默认值唯一定义处
+│   ├── render/draw-scene.ts  # 唯一渲染器（预览=导出=缩略图）
+│   ├── text/wrap.ts          # CJK 禁则断行
+│   ├── platforms.ts          # 14 档平台预设
+│   └── storage/              # autosave / history / share-url
+├── data/templates.ts         # 模板纯 JSON
+├── public/fonts/*.woff2      # Maple Mono CN 子集
+├── wrangler.jsonc            # Workers Static Assets
+└── docs/                     # 需求、实施计划、审查清单
 ```
 
-## 🔧 配置说明
+## 部署（Cloudflare Workers）
 
-项目使用`.env`文件进行基本配置：
-
-```
-# 项目名称
-VITE_APP_SITE_NAME = 'Cover Magic'
-# 页面描述
-VITE_APP_SITE_DESCRIPTION = "专业的封面设计工具，支持实时预览和高质量导出"
-# 关键词
-VITE_APP_SITE_KEYWORDS = "封面设计,封面,设计,cover,designer"
+```bash
+pnpm build          # 产出 out/
+pnpm deploy         # wrangler deploy --dry-run，校验配置
+# 真实部署需自行 wrangler login 后执行 wrangler deploy（本仓库不代为登录/发布）
 ```
 
-## 📄 许可证
+- 静态产物目录：`out/`（见 `wrangler.jsonc` 的 `assets.directory`）
+- 自定义响应头：`public/_headers`（字体与 `_next/static` immutable、HTML no-cache、基础安全头）
+- 路由：`trailingSlash: true` → `/editor` → `editor/index.html`；未知路径走 `404-page`
 
-本项目采用 [MIT](LICENSE) 许可证。
+### 已知限制
 
-## 👨‍💻 作者
+- 字体为 GB2312 子集，**子集外生僻字会回退系统字体**（已接受的取舍）
+- 无后端、无账号、无统计代码；分享靠 URL hash
+- `/editor` 仅支持桌面端（窄视口 / 触屏显示提示卡）
 
-- **姓名**: baiwumm
-- **邮箱**: [me@baiwumm.com](mailto:me@baiwumm.com)
-- **博客**: [https://baiwumm.com](https://baiwumm.com)
-- **GitHub**: [https://github.com/baiwumm](https://github.com/baiwumm)
+## 许可证
 
-## 🔗 相关链接
+[MIT](LICENSE)
 
-- **问题反馈**: [https://github.com/baiwumm/cover-magic/issues](https://github.com/baiwumm/cover-magic/issues)
-- **项目仓库**: [https://github.com/baiwumm/cover-magic](https://github.com/baiwumm/cover-magic)
+## 作者
 
-## ⭐ Star History
+- **baiwumm** · [me@baiwumm.com](mailto:me@baiwumm.com) · [baiwumm.com](https://baiwumm.com) · [GitHub](https://github.com/baiwumm)
 
-<div align="center">
-  <img src="https://api.star-history.com/svg?repos=baiwumm/cover-magic&type=Date" alt="Star History Chart" width="600"/>
-</div>
+## 反馈
+
+- [Issues](https://github.com/baiwumm/cover-magic/issues)
+- 线上地址：<https://cover.baiwumm.com>
 
 ---
 
 <div align="center">
   <p>如果这个项目对你有帮助，请给它一个 ⭐️</p>
-  <p>Made with ❤️ by <a href="https://github.com/baiwumm">@baiwumm</a></p>
-  <p>© 2025 Cover Magic. All rights reserved.</p>
+  <p>© Cover Magic. All rights reserved.</p>
 </div>

@@ -1,0 +1,25 @@
+# Cloudflare Workers Static Assets 自定义响应头（Phase 8.2）
+# 放在 public/ 会随 next build 拷入 out/，由 Workers 解析、不作为静态文件下发。
+# 不加 CSP：与 Next 静态导出内联脚本冲突（计划 7.4 / requirements §9）。
+# 实测（wrangler 4.135 local）：`/*.html` 对 trailingSlash 的目录式 URL（/、/editor/）不命中，
+# 因此 HTML 规则按实际路径写；未知路径 404 由 not_found_handling 提供，默认 must-revalidate 可接受。
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/
+  Cache-Control: no-cache
+
+/editor/
+  Cache-Control: no-cache
+
+/404/
+  Cache-Control: no-cache
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
