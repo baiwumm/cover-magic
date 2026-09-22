@@ -37,6 +37,9 @@ async function fileToDataUrl(file: File): Promise<string> {
   })
 }
 
+/** SVG 不经降采样、原样进 Scene，必须单独限体积（P2） */
+const MAX_SVG_BYTES = 256 * 1024
+
 export function AssetDropzone({
   label = "拖拽图片到此处，或点击选择",
   onDataUrl,
@@ -49,9 +52,15 @@ export function AssetDropzone({
     async (files: File[]) => {
       const file = files[0]
       if (!file) return
+      const isSvg = file.type === "image/svg+xml"
+      if (isSvg && file.size > MAX_SVG_BYTES) {
+        toast.error("SVG 文件过大", {
+          description: "请控制在 256KB 以内，过大 SVG 可能撑爆本地存储。",
+        })
+        return
+      }
       setBusy(true)
       try {
-        const isSvg = file.type === "image/svg+xml"
         onDataUrl(
           downsample && !isSvg
             ? await fileToDownsampledDataUrl(file)
@@ -70,7 +79,8 @@ export function AssetDropzone({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"] },
+    // accept 与文案一致：PNG / JPG / WebP / SVG（不收 GIF，P2）
+    accept: { "image/*": [".png", ".jpg", ".jpeg", ".webp", ".svg"] },
     maxFiles: 1,
   })
 

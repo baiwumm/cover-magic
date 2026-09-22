@@ -17,7 +17,6 @@ import type { TextStyle } from "@/lib/scene"
 export type TextSlot = "title" | "subtitle" | "watermark"
 
 interface TextStyleEditorProps {
-  slot: TextSlot
   style: TextStyle & { text: string; autoFit: boolean; maxWidthPct: number }
   onPatch: (
     patch: Partial<

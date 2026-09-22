@@ -4,9 +4,10 @@
  * 模板抽屉（4.3）：按 bestRatio 分组 + 缩略图网格，点击整体套用（R-11）。
  */
 
+import { LayoutGrid } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sheet,
@@ -38,11 +39,13 @@ function TemplateThumb({ template }: { template: Template }) {
   useEffect(() => {
     if (dataUrl) return
     let cancelled = false
-    void ensureThumbnails([{ id: template.id, scene: template.scene }]).then(
-      () => {
+    void ensureThumbnails([{ id: template.id, scene: template.scene }])
+      .then(() => {
         if (!cancelled) setDataUrl(getCachedThumbnail(template.id) ?? null)
-      },
-    )
+      })
+      .catch(() => {
+        // 失败保持 Skeleton，不抛到 React
+      })
     return () => {
       cancelled = true
     }
@@ -86,9 +89,10 @@ export function TemplateDrawer() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Badge variant="outline" className="cursor-pointer h-7 px-3 text-xs">
+        <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs">
+          <LayoutGrid className="size-3.5" />
           模板
-        </Badge>
+        </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-[420px] sm:max-w-[420px] p-0">
         <SheetHeader className="px-4 pt-4">

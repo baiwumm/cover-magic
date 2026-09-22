@@ -22,15 +22,18 @@ export function Hero() {
         {/* 两行分排：Maple Mono CN 比系统字体宽，md:text-7xl 下连排会在「封/面」处断行 */}
         <h1 className="flex flex-col gap-1 text-5xl font-bold leading-tight tracking-tight md:text-7xl">
           <TextGenerateEffect words="为每一篇文章" />
+          {/* P1-18/P1-19：整行一份渐变 + 整行入场；浅色加深色阶保证对比度 */}
           <TextGenerateEffect
             words="配一张好封面"
-            charClassName="bg-gradient-to-r from-blue-500 via-sky-400 to-indigo-400 bg-clip-text text-transparent"
+            stagger={false}
+            className="bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-500 bg-clip-text text-transparent dark:from-blue-500 dark:via-sky-400 dark:to-indigo-400"
           />
         </h1>
 
         <p className="max-w-xl text-base text-muted-foreground md:text-lg">
-          Cover Magic 是一款中文友好的封面图设计工具：拖拽定位、中文断行、
-          平台尺寸预设、实时预览与高清导出，全流程在浏览器完成。
+          {
+            "Cover Magic 是一款中文友好的封面图设计工具：拖拽定位、中文断行、平台尺寸预设、实时预览与高清导出，全流程在浏览器完成。"
+          }
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">

@@ -6,6 +6,27 @@
 
 const imageCache = new Map<string, HTMLImageElement>()
 const pending = new Map<string, Promise<HTMLImageElement | null>>()
+/** LRU 上限：上传 dataURL 很大，不能永久驻留（P2） */
+const IMAGE_CACHE_MAX = 48
+
+function cacheGet(key: string): HTMLImageElement | null {
+  const img = imageCache.get(key)
+  if (!img) return null
+  // 刷新到队尾（LRU）
+  imageCache.delete(key)
+  imageCache.set(key, img)
+  return img
+}
+
+function cacheSet(key: string, img: HTMLImageElement): void {
+  imageCache.delete(key)
+  imageCache.set(key, img)
+  while (imageCache.size > IMAGE_CACHE_MAX) {
+    const oldest = imageCache.keys().next().value
+    if (oldest === undefined) break
+    imageCache.delete(oldest)
+  }
+}
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -44,7 +65,7 @@ async function loadSource(
   src: string,
 ): Promise<HTMLImageElement | null> {
   const img = await loadImage(src)
-  if (img) imageCache.set(key, img)
+  if (img) cacheSet(key, img)
   return img
 }
 
@@ -55,7 +76,7 @@ export function getCachedImage(source: {
   dataUrl?: string
 }): HTMLImageElement | null {
   const key = sourceKey(source)
-  return key ? (imageCache.get(key) ?? null) : null
+  return key ? cacheGet(key) : null
 }
 
 /** 异步加载并缓存；并发调用共享同一 promise */
@@ -66,7 +87,7 @@ export function preloadImage(source: {
 }): Promise<HTMLImageElement | null> {
   const key = sourceKey(source)
   if (!key) return Promise.resolve(null)
-  const cached = imageCache.get(key)
+  const cached = cacheGet(key)
   if (cached) return Promise.resolve(cached)
   const inflight = pending.get(key)
   if (inflight) return inflight
@@ -83,17 +104,32 @@ export function preloadImage(source: {
   return task
 }
 
-/** 预热 Scene 中的全部位图资源（背景图 / logo） */
+/**
+ * 预热 Scene 中的全部位图资源（背景图 / logo）。
+ * 返回加载失败的资源名（如 ["背景图", "Logo"]）；预览可忽略，导出前必须检查（P1-24）。
+ */
 export async function preloadSceneAssets(scene: {
   background: { kind: string; dataUrl?: string }
   logo: { source: { kind: string; code?: string; dataUrl?: string } } | null
-}): Promise<void> {
-  const tasks: Promise<unknown>[] = []
+}): Promise<string[]> {
+  const failed: string[] = []
+  const tasks: Promise<void>[] = []
   if (scene.background.kind === "image" && scene.background.dataUrl) {
     tasks.push(
-      preloadImage({ kind: "upload", dataUrl: scene.background.dataUrl }),
+      preloadImage({ kind: "upload", dataUrl: scene.background.dataUrl }).then(
+        (img) => {
+          if (!img) failed.push("背景图")
+        },
+      ),
     )
   }
-  if (scene.logo) tasks.push(preloadImage(scene.logo.source))
+  if (scene.logo) {
+    tasks.push(
+      preloadImage(scene.logo.source).then((img) => {
+        if (!img) failed.push("Logo")
+      }),
+    )
+  }
   await Promise.all(tasks)
+  return failed
 }

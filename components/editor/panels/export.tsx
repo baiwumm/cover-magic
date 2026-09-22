@@ -26,12 +26,28 @@ export function ExportPanel() {
   const [quality, setQuality] = useState(0.92)
   const [filename, setFilename] = useState("")
   const [busy, setBusy] = useState(false)
-  const [estimate, setEstimate] = useState<string | null>(null)
+  // 快照绑定计算时的 scene/format/quality 引用；任一变化即显示失效（P2）
+  const [estimate, setEstimate] = useState<{
+    text: string
+    scene: typeof scene
+    format: ExportFormat
+    quality: number
+  } | null>(null)
+  const estimateText =
+    estimate &&
+    estimate.scene === scene &&
+    estimate.format === format &&
+    estimate.quality === quality
+      ? estimate.text
+      : null
 
   const fmtBytes = (n: number) =>
     n >= 1024 * 1024
       ? `${(n / 1024 / 1024).toFixed(1)} MB`
       : `${Math.round(n / 1024)} KB`
+
+  const rememberEstimate = (text: string) =>
+    setEstimate({ text, scene, format, quality })
 
   const doExport = async () => {
     setBusy(true)
@@ -42,7 +58,14 @@ export function ExportPanel() {
         blob,
         name.endsWith(`.${format}`) ? name : `${name}.${format}`,
       )
-      setEstimate(fmtBytes(blob.size))
+      rememberEstimate(fmtBytes(blob.size))
+    } catch (err) {
+      toast.error("导出失败", {
+        description:
+          err instanceof Error
+            ? `绘制或编码出错：${err.message}`
+            : "绘制或编码出错，请重试或缩小目标尺寸。",
+      })
     } finally {
       setBusy(false)
     }
@@ -52,7 +75,12 @@ export function ExportPanel() {
     setBusy(true)
     try {
       const blob = await exportSceneToBlob(scene, format, quality)
-      setEstimate(fmtBytes(blob.size))
+      rememberEstimate(fmtBytes(blob.size))
+    } catch (err) {
+      toast.error("预估体积失败", {
+        description:
+          err instanceof Error ? err.message : "请重试或缩小目标尺寸。",
+      })
     } finally {
       setBusy(false)
     }
@@ -85,7 +113,7 @@ export function ExportPanel() {
         <ItemContent>
           <ItemTitle className="text-xs">
             目标尺寸：{scene.exportSize.width} × {scene.exportSize.height} px
-            {estimate ? ` · 预估体积：${estimate}` : ""}
+            {estimateText ? ` · 预估体积：${estimateText}` : ""}
           </ItemTitle>
         </ItemContent>
       </Item>

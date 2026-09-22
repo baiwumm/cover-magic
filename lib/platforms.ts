@@ -76,3 +76,15 @@ export function getPreset(id: string): PlatformPreset | undefined {
 export function presetRatio(p: PlatformPreset): Ratio {
   return { w: p.width, h: p.height }
 }
+
+/**
+ * 按导出宽高反查预设 id（模板/分享载入后 presetId 常为 "custom"，
+ * 顶栏需显示与实际尺寸一致的预设名，P2）。
+ * 同尺寸多预设时取列表首个。
+ */
+export function matchPresetId(width: number, height: number): string {
+  const hit = PLATFORM_PRESETS.find(
+    (p) => p.id !== "custom" && p.width === width && p.height === height,
+  )
+  return hit?.id ?? "custom"
+}

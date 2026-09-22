@@ -21,14 +21,14 @@ const STEPS = [
 export function Steps() {
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-16">
-      <h2 className="mb-10 text-center text-3xl font-bold tracking-tight">
+      <h2 className="mb-10 text-center text-3xl font-bold tracking-tight md:text-4xl">
         三步搞定
       </h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {STEPS.map((s) => (
           <Card key={s.step} className="rounded-2xl border-dashed">
             <CardHeader>
-              <span className="font-mono text-3xl font-bold text-muted-foreground/40">
+              <span className="font-mono text-3xl font-bold text-muted-foreground">
                 {s.step}
               </span>
               <CardTitle className="text-base">{s.title}</CardTitle>

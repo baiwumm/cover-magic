@@ -112,32 +112,22 @@ const LightRays: React.FC<LightRaysProps> = ({
   const animationIdRef = useRef<number | null>(null)
   const meshRef = useRef<Mesh | null>(null)
   const cleanupFunctionRef = useRef<(() => void) | null>(null)
-  const [isVisible, setIsVisible] = useState(false)
-  const observerRef = useRef<IntersectionObserver | null>(null)
+  // P1-21：reduced-motion 直接不启 WebGL；触屏 coarse pointer 静态单帧 + dpr 1
+  // null = SSR/首帧未测，避免「先启动再销毁」闪烁
+  const [reducedMotion, setReducedMotion] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (!containerRef.current) return
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0]
-        setIsVisible(entry.isIntersecting)
-      },
-      { threshold: 0.1 },
-    )
-
-    observerRef.current.observe(containerRef.current)
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-        observerRef.current = null
-      }
-    }
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const sync = () => setReducedMotion(mq.matches)
+    sync()
+    mq.addEventListener("change", sync)
+    return () => mq.removeEventListener("change", sync)
   }, [])
 
   useEffect(() => {
-    if (!isVisible || !containerRef.current) return
+    // 容器是 fixed 全屏层（app/page.tsx），恒在视口内 —— 原 IntersectionObserver
+    // 的 pause 分支不可达，已删除（P1-21）
+    if (reducedMotion !== false || !containerRef.current) return
 
     if (cleanupFunctionRef.current) {
       cleanupFunctionRef.current()
@@ -151,8 +141,12 @@ const LightRays: React.FC<LightRaysProps> = ({
 
       if (!containerRef.current) return
 
+      // 触屏无鼠标、全屏常驻动画费电：降 dpr + 只画一帧静态背景（P1-21）
+      const coarsePointer = window.matchMedia("(pointer: coarse)").matches
+      const staticFrame = coarsePointer
+      const maxDpr = coarsePointer ? 1 : 2
       const renderer = new Renderer({
-        dpr: Math.min(window.devicePixelRatio, 2),
+        dpr: Math.min(window.devicePixelRatio, maxDpr),
         alpha: true,
       })
       rendererRef.current = renderer
@@ -301,7 +295,7 @@ void main() {
       const updatePlacement = () => {
         if (!containerRef.current || !renderer) return
 
-        renderer.dpr = Math.min(window.devicePixelRatio, 2)
+        renderer.dpr = Math.min(window.devicePixelRatio, maxDpr)
 
         const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current
         renderer.setSize(wCSS, hCSS)
@@ -315,6 +309,15 @@ void main() {
         const { anchor, dir } = getAnchorAndDir(raysOrigin, w, h)
         uniforms.rayPos.value = anchor
         uniforms.rayDir.value = dir
+
+        if (staticFrame) {
+          uniforms.iTime.value = 0
+          try {
+            renderer.render({ scene: mesh })
+          } catch (error) {
+            console.warn("WebGL rendering error:", error)
+          }
+        }
       }
 
       const loop = (t: number) => {
@@ -351,7 +354,9 @@ void main() {
 
       window.addEventListener("resize", updatePlacement)
       updatePlacement()
-      animationIdRef.current = requestAnimationFrame(loop)
+      if (!staticFrame) {
+        animationIdRef.current = requestAnimationFrame(loop)
+      }
 
       cleanupFunctionRef.current = () => {
         if (animationIdRef.current) {
@@ -391,7 +396,7 @@ void main() {
       }
     }
   }, [
-    isVisible,
+    reducedMotion,
     raysOrigin,
     raysColor,
     raysSpeed,
@@ -444,6 +449,15 @@ void main() {
   ])
 
   useEffect(() => {
+    // coarse pointer 上无鼠标，跳过 mousemove 监听（P1-21）
+    if (
+      reducedMotion !== false ||
+      !followMouse ||
+      window.matchMedia("(pointer: coarse)").matches
+    ) {
+      return
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current || !rendererRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
@@ -452,11 +466,9 @@ void main() {
       mouseRef.current = { x, y }
     }
 
-    if (followMouse) {
-      window.addEventListener("mousemove", handleMouseMove)
-      return () => window.removeEventListener("mousemove", handleMouseMove)
-    }
-  }, [followMouse])
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [reducedMotion, followMouse])
 
   return (
     <div

@@ -15,11 +15,11 @@ export function getCachedThumbnail(id: string): string | undefined {
   return cache.get(id)
 }
 
-/** 渲染一张缩略图（宽 320，高随比例） */
+/** 渲染一张缩略图（宽 640 高清，高随比例；P2 源宽 320 偏软） */
 export async function renderThumbnail(
   id: string,
   scene: Scene,
-  width = 320,
+  width = 640,
 ): Promise<string> {
   const canvas = document.createElement("canvas")
   canvas.width = width

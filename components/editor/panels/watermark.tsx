@@ -2,6 +2,7 @@
 
 import { SliderField } from "@/components/controls/slider-field"
 import { Button } from "@/components/ui/button"
+import { createDefaultWatermark } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 import { TextStyleEditor } from "./text-style-editor"
 
@@ -20,24 +21,7 @@ export function WatermarkPanel() {
         className="h-8"
         onClick={() =>
           setScene((draft) => {
-            draft.watermark = {
-              text: "@baiwumm",
-              autoFit: false,
-              maxWidthPct: 40,
-              x: 92,
-              y: 92,
-              fontFamily: "Maple Mono CN",
-              fontWeight: 400,
-              italic: false,
-              size: 24,
-              color: "#94a3b8",
-              letterSpacing: 0,
-              lineHeight: 1.25,
-              align: "right",
-              uppercase: false,
-              shadow: 0,
-              opacity: 0.8,
-            }
+            draft.watermark = createDefaultWatermark()
           })
         }
       >
@@ -49,7 +33,6 @@ export function WatermarkPanel() {
   return (
     <div className="flex flex-col gap-3">
       <TextStyleEditor
-        slot="watermark"
         style={scene.watermark}
         disableAutoFit
         onPatch={(patch) =>

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { CURATED_ICONS, searchIcons } from "@/lib/iconify"
 import { preloadImage } from "@/lib/render/icons"
+import { LOGO_SIZE_RANGE } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -24,6 +25,8 @@ export function LogoPanel() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<string[]>(CURATED_ICONS)
   const [searching, setSearching] = useState(false)
+  /** 网络失败 ≠ 无结果：区分「离线」与「没有匹配」（P2） */
+  const [offline, setOffline] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   // 300ms 防抖搜索；空查询回退精选集合
@@ -32,6 +35,7 @@ export function LogoPanel() {
     if (!q) {
       setResults(CURATED_ICONS)
       setSearching(false)
+      setOffline(false)
       return
     }
     setSearching(true)
@@ -41,9 +45,17 @@ export function LogoPanel() {
       abortRef.current = controller
       searchIcons(q, { signal: controller.signal })
         .then((icons) => {
-          if (!controller.signal.aborted) setResults(icons)
+          if (!controller.signal.aborted) {
+            setResults(icons)
+            setOffline(false)
+          }
         })
-        .catch(() => {})
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setResults(CURATED_ICONS)
+            setOffline(true)
+          }
+        })
         .finally(() => {
           if (!controller.signal.aborted) setSearching(false)
         })
@@ -53,12 +65,10 @@ export function LogoPanel() {
 
   const applyIcon = async (code: string) => {
     setScene((draft) => {
-      draft.logo = {
-        source: { kind: "iconify", code },
-        size: 200,
-        x: 50,
-        y: 22,
-      }
+      // 换图标保留已调好的尺寸/位置（P2）
+      draft.logo = draft.logo
+        ? { ...draft.logo, source: { kind: "iconify", code } }
+        : { source: { kind: "iconify", code }, size: 200, x: 50, y: 22 }
     })
     await preloadImage({ kind: "iconify", code })
   }
@@ -77,6 +87,11 @@ export function LogoPanel() {
         />
         {searching && (
           <span className="text-[11px] text-muted-foreground">搜索中…</span>
+        )}
+        {offline && !searching && (
+          <span className="text-[11px] text-muted-foreground">
+            网络不可用，已展示精选图标；上传图片不受影响。
+          </span>
         )}
       </div>
 
@@ -100,7 +115,7 @@ export function LogoPanel() {
             </button>
           ))}
         </div>
-        {!results.length && !searching && (
+        {!results.length && !searching && !offline && (
           <p className="p-3 text-center text-[11px] text-muted-foreground">
             没有找到匹配的图标
           </p>
@@ -117,12 +132,14 @@ export function LogoPanel() {
           downsample
           onDataUrl={(dataUrl) =>
             setScene((draft) => {
-              draft.logo = {
-                source: { kind: "upload", dataUrl },
-                size: 200,
-                x: 50,
-                y: 22,
-              }
+              draft.logo = draft.logo
+                ? { ...draft.logo, source: { kind: "upload", dataUrl } }
+                : {
+                    source: { kind: "upload", dataUrl },
+                    size: 200,
+                    x: 50,
+                    y: 22,
+                  }
             })
           }
         />
@@ -133,8 +150,8 @@ export function LogoPanel() {
           <SliderField
             label="图标尺寸"
             value={scene.logo.size}
-            min={40}
-            max={600}
+            min={LOGO_SIZE_RANGE[0]}
+            max={LOGO_SIZE_RANGE[1]}
             unit="px"
             onChange={(size) =>
               setScene((draft) => {

@@ -57,7 +57,7 @@ public/fonts/*.woff2
 - **R-12**：不得依赖任何服务端能力。禁止 Route Handler、Server Actions、`middleware.ts`、`ImageResponse`、ISR。分享链接走 hash 序列化（见 R-13）。
 - **R-13**：配置分享用 URL hash（`#s=` + 压缩后的 Scene），零后端。**预留适配层**：所有可能服务化的逻辑（分享、远程图片获取）封在 `lib/` 后，UI 层不感知实现。
 - **R-14**：`next/image` 的默认优化器在 Workers Assets 上不存在。图片一律用原生 `<img>` + 预先压缩提交的静态资源。远程图需在 `next.config.ts` 的 `images.remotePatterns` 声明（若改用 loader 则必须配 `loader: 'custom'`）。
-- **R-15**：字体不走 `next/font/google`（构建期需访问 Google，托管环境不可控）。用 `@font-face` + `public/fonts/*.woff2`（子集化产物），仅在 `/editor` 页 `preload`。**必须同时提供 400 与 700 两个字重**（这是删掉 v1 `strokeText` 伪加粗的前提，见 R-7）；产物由 `scripts/fetch-fonts.sh` 生成，Bold 子集必须与 regular 使用**同一份码位表**，避免"常规体有字、粗体缺字"。子集为 GB2312 范围，**子集外生僻字会回退系统字体**，这是已接受的已知边界，不要为此改方案。
+- **R-15**：字体不走 `next/font/google`（构建期需访问 Google，托管环境不可控）。用 `@font-face` + `public/fonts/*.woff2`（子集化产物），在**根布局** `app/layout.tsx` `preload` 两字重（D-35：全站 UI 共用 Maple Mono CN，落地页也会为模板缩略图下载同一批 woff2，preload 不增加字节）。**必须同时提供 400 与 700 两个字重**（这是删掉 v1 `strokeText` 伪加粗的前提，见 R-7）；产物由 `scripts/fetch-fonts.sh` 生成，Bold 子集必须与 regular 使用**同一份码位表**，避免"常规体有字、粗体缺字"。子集为 GB2312 范围，**子集外生僻字会回退系统字体**，这是已接受的已知边界，不要为此改方案。
 - **R-16**：Workers 限制：单文件 ≤ 25 MiB、免费计划 ≤ 20000 文件。持久化只用 `localStorage`（存 Scene JSON）；上传图片必须先降采样到长边 ≤ 1920 并转 WebP（q≈0.82）再存。不引 IndexedDB。
 - **R-17**：部署配置只产出 `wrangler.jsonc` + `package.json` 的 `deploy` 脚本。**不执行** `wrangler login` / `wrangler deploy`，不触碰 Cloudflare 账号。
 
@@ -68,7 +68,7 @@ public/fonts/*.woff2
   - 官方注册表**没有**（已实测）：color picker、dropzone/文件上传。
   - ⚠️ 别误装：注册表里的 `attachment` / `bubble` / `message` / `message-scroller` / `marker` 是**聊天 UI 组件**，不是文件选择器或图钉。
   - ⚠️ 社区注册表已实测不可用：`shadcn.io/r/color-picker.json` 返回 401（需付费鉴权）、`originui.com/r/color-picker.json` 重定向到文档页、`base-ui.com/r/index.json` 返回 404。不要为省事引这些来源。
-- **R-19**：主题走 shadcn 默认中性（黑/白/灰 + OKLCH 变量），与视觉参考项目 ogimg 一致。不要引入彩色主色。变体用 `cva`。
+- **R-19**：主题走 shadcn 默认中性（黑/白/灰 + OKLCH 变量），与视觉参考项目 ogimg 一致。不要引入彩色主色。变体用 `cva`。**例外**：落地页装饰色不受 R-19 约束 —— hero 标题渐变、ogl 光束、模板缩略图内容色可彩色；编辑器 UI 与控件仍保持中性。
 - **R-20**：操作便捷优先于参数完备。**不要用一维滑块调二维位置** —— 元素定位靠画布拖拽 + 方向键微调，不靠 XY 滑块对。已删除的控件（背景透明度、随机文件名及其字符集选项、加载动画）不要以新名义加回来。
 - **R-21**：平台预设（`lib/platforms.ts`）选中后**只填入推荐值，不锁死宽高输入**（v1 的 `disabled` 是过度限制，且这些尺寸均为社区经验值、可能过期）。预设按「中文社区 / 海外平台 / 通用」分组。
 - **R-22**：移动端：`/editor` 检测到窄视口或触屏时渲染「请在 PC 端使用」提示卡，不做响应式编辑器。落地页保持可浏览。

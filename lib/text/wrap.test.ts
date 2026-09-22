@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { fitTextBlock, wrapText } from "./wrap"
+import {
+  fitTextBlock,
+  LINE_END_PROHIBITED,
+  LINE_START_PROHIBITED,
+  wrapText,
+} from "./wrap"
 
 /** 确定性量宽：CJK/全角 = size，拉丁/半角 = size * 0.55 */
 function makeMeasure(fontPx = 100) {
@@ -57,8 +62,12 @@ describe("wrapText", () => {
       measureText: m,
     })
     // "设计完成。" 恰好 500 宽；"标"放不下时句号不能被甩到下一行行首
+    // 禁则字面量从实现 import，避免测试与源码各维护一份（P2）
     for (const line of lines) {
-      expect(line[0]).not.toMatch(/[，。、！？；：）》”’％‰·—…]/)
+      expect(
+        line[0] && LINE_START_PROHIBITED.includes(line[0]),
+        `行首出现禁则标点：${line}`,
+      ).toBeFalsy()
     }
   })
 
@@ -69,7 +78,11 @@ describe("wrapText", () => {
       measureText: m,
     })
     for (const line of lines) {
-      expect(line[line.length - 1]).not.toMatch(/[（《“‘]/)
+      const last = line[line.length - 1]
+      expect(
+        last && LINE_END_PROHIBITED.includes(last),
+        `行尾出现禁则标点：${line}`,
+      ).toBeFalsy()
     }
   })
 

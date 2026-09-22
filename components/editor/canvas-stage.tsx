@@ -6,8 +6,10 @@
  * 不参与导出（R-24）。
  * 拖拽期间改本地预览 Scene 并直接重绘，pointerup 才一次性提交进
  * history（3.7 / 7.8：撤销一次拖拽 = 回到拖拽前）。
+ * 选中态在 store（P1-10 与左栏 Tab 联动）；快捷键仅画布聚焦时启用（P1-3）。
  */
 
+import { Loader2 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ensureFontLoaded } from "@/lib/fonts"
 import { clamp, pxToPct, type SnapGuide, snapBlock } from "@/lib/geometry"
@@ -18,15 +20,16 @@ import {
   type SlotKey,
 } from "@/lib/render/element-rects"
 import { preloadSceneAssets } from "@/lib/render/icons"
-import type { Scene } from "@/lib/scene"
+import { LOGO_SIZE_RANGE, type Scene } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 
 /** 拖拽容差：4 基准 px（3.4） */
 const SNAP_TOLERANCE_BASIS_PX = 4
 /** 键盘微调步长：1 基准 px，Shift ×10（3.5） */
 const ARROW_STEP_BASIS_PX = 1
-/** logo 尺寸范围（基准 px） */
-const LOGO_SIZE_RANGE: [number, number] = [40, 800]
+/** 缩放手柄命中/绘制尺寸（设备 px 基准，P2 可发现性） */
+const HANDLE_HIT_PX = 14
+const HANDLE_DRAW_PX = 12
 
 const SLOT_ORDER: SlotKey[] = ["logo", "title", "subtitle", "watermark"]
 
@@ -42,10 +45,13 @@ interface DragState {
 export function CanvasStage() {
   const scene = useSceneStore((s) => s.scene)
   const setScene = useSceneStore((s) => s.setScene)
+  const selected = useSceneStore((s) => s.selected)
+  const setSelected = useSceneStore((s) => s.setSelected)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const [selected, setSelected] = useState<SlotKey | null>(null)
+  /** 首帧完成前显示 loading，避免字体/资源 await 期被误判白屏（R-23） */
+  const [ready, setReady] = useState(false)
 
   const dimsRef = useRef({ w: 0, h: 0 })
   const dragRef = useRef<DragState | null>(null)
@@ -53,6 +59,8 @@ export function CanvasStage() {
   /** 当前生效的 Scene（拖拽中 = preview），供 overlay 计算与重绘 */
   const sceneRef = useRef(scene)
   sceneRef.current = dragRef.current?.preview ?? scene
+  const selectedRef = useRef(selected)
+  selectedRef.current = selected
 
   /** 绘制场景层；sceneOverride 供拖拽预览 */
   const drawSceneLayer = useCallback(async (override?: Scene) => {
@@ -83,6 +91,7 @@ export function CanvasStage() {
     }
     dimsRef.current = { w: canvas.width, h: canvas.height }
     drawScene(ctx, active, { width: canvas.width, height: canvas.height })
+    setReady(true)
   }, [])
 
   /** 绘制 overlay：选中框 + 吸附参考线 */
@@ -111,25 +120,31 @@ export function CanvasStage() {
       ctx.stroke()
     }
 
-    if (!selected) return
+    const sel = selectedRef.current
+    if (!sel) return
     const rects = computeSceneRects(
       sceneRef.current,
       overlay.width,
       overlay.height,
     )
-    const r = rects[selected]
+    const r = rects[sel]
     if (!r) return
     ctx.strokeStyle = "oklch(0.72 0.17 45)"
     ctx.lineWidth = 1.5
     ctx.strokeRect(r.x, r.y, r.width, r.height)
-    if (selected === "logo") {
-      const hs = Math.max(10, 10 * scale)
+    if (sel === "logo") {
+      const hs = Math.max(HANDLE_DRAW_PX * scale, HANDLE_DRAW_PX)
       ctx.fillStyle = "oklch(0.72 0.17 45)"
       ctx.fillRect(r.x + r.width - hs / 2, r.y + r.height - hs / 2, hs, hs)
+      // 外描边提高在浅色封面上的可发现性
+      ctx.strokeStyle = "oklch(1 0 0 / 0.9)"
+      ctx.lineWidth = 1
+      ctx.strokeRect(r.x + r.width - hs / 2, r.y + r.height - hs / 2, hs, hs)
     }
-  }, [selected])
+  }, [])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scene 经 sceneRef 间接读取，此处仅作为重绘触发器
+  // 场景变更：只重画，不重建 ResizeObserver（避免首帧双重重绘，P2）
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scene 经 sceneRef 间接读取，此处仅作重绘触发器
   useEffect(() => {
     let cancelled = false
     const draw = async () => {
@@ -137,13 +152,27 @@ export function CanvasStage() {
       if (!cancelled) drawOverlay()
     }
     void draw()
-    const ro = new ResizeObserver(() => void draw())
-    if (wrapRef.current) ro.observe(wrapRef.current)
     return () => {
       cancelled = true
-      ro.disconnect()
     }
   }, [drawSceneLayer, drawOverlay, scene])
+
+  // 尺寸观察：仅挂载时建一次
+  useEffect(() => {
+    const ro = new ResizeObserver(() => {
+      void drawSceneLayer().then(drawOverlay)
+    })
+    if (wrapRef.current) ro.observe(wrapRef.current)
+    return () => {
+      ro.disconnect()
+    }
+  }, [drawSceneLayer, drawOverlay])
+
+  // 选中变化只重绘 overlay（不重跑场景层）；selected 经 selectedRef 读取
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selection 触发轻量重绘
+  useEffect(() => {
+    drawOverlay()
+  }, [selected, drawOverlay])
 
   /** 指针坐标 → 画布设备像素 */
   const toCanvasPx = (e: React.PointerEvent) => {
@@ -157,6 +186,8 @@ export function CanvasStage() {
   }
 
   const onPointerDown = (e: React.PointerEvent) => {
+    // 聚焦 overlay，快捷键限定画布（P1-3）
+    overlayRef.current?.focus()
     const pos = toCanvasPx(e)
     if (!pos) return
     const { px, py } = pos
@@ -174,7 +205,10 @@ export function CanvasStage() {
     let scaling = false
     if (slot === "logo" && rects.logo) {
       const r = rects.logo
-      const handleSize = Math.max(10, 10 * (dimsRef.current.h / 1080))
+      const handleSize = Math.max(
+        HANDLE_HIT_PX,
+        HANDLE_HIT_PX * (dimsRef.current.h / 1080),
+      )
       scaling =
         px >= r.x + r.width - handleSize && py >= r.y + r.height - handleSize
     }
@@ -191,11 +225,39 @@ export function CanvasStage() {
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
-    const drag = dragRef.current
-    if (!drag) return
     const pos = toCanvasPx(e)
     if (!pos) return
     const { px, py } = pos
+    const drag = dragRef.current
+
+    if (!drag) {
+      // 悬停缩放手柄时给 nwse-resize，提升可发现性（P2）
+      const overlay = overlayRef.current
+      if (!overlay) return
+      const sel = selectedRef.current
+      if (sel === "logo" && sceneRef.current.logo) {
+        const rects = computeSceneRects(
+          sceneRef.current,
+          dimsRef.current.w,
+          dimsRef.current.h,
+        )
+        const r = rects.logo
+        if (r) {
+          const handleSize = Math.max(
+            HANDLE_HIT_PX,
+            HANDLE_HIT_PX * (dimsRef.current.h / 1080),
+          )
+          const near =
+            px >= r.x + r.width - handleSize &&
+            py >= r.y + r.height - handleSize
+          overlay.style.cursor = near ? "nwse-resize" : "move"
+          return
+        }
+      }
+      overlay.style.cursor = "move"
+      return
+    }
+
     const curPct = {
       x: pxToPct(px, dimsRef.current.w),
       y: pxToPct(py, dimsRef.current.h),
@@ -273,29 +335,43 @@ export function CanvasStage() {
     })
   }
 
-  /** 键盘：方向键微调 / Tab 循环选中 / Delete 清除槽位（3.5） */
+  /** 键盘：方向键微调 / Tab 循环选中 / Delete 清除槽位（3.5）
+   *  仅 overlay 聚焦时生效；`defaultPrevented` 让位 Radix（P1-3） */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return
+      if (e.ctrlKey || e.metaKey || e.altKey) return
       const target = e.target as HTMLElement | null
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return
+      if (target?.isContentEditable) return
+
+      const overlay = overlayRef.current
+      const canvasFocused =
+        overlay != null && document.activeElement === overlay
 
       if (e.key === "Tab") {
+        // Tab 未聚焦画布时不拦截，保证面板按钮可 Tab 到达（P1-3）
+        if (!canvasFocused) return
         e.preventDefault()
         const present = SLOT_ORDER.filter((s) => scene[s])
         if (!present.length) return
-        const idx = selected ? present.indexOf(selected) : -1
+        const cur = selectedRef.current
+        const idx = cur ? present.indexOf(cur) : -1
         const next = e.shiftKey
           ? present[(idx - 1 + present.length) % present.length]
           : present[(idx + 1) % present.length]
-        setSelected(selected ? next : present[0])
+        setSelected(cur ? next : present[0])
         return
       }
-      if (!selected) return
+
+      if (!canvasFocused) return
+      const cur = selectedRef.current
+      if (!cur) return
 
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault()
         setScene((draft) => {
-          draft[selected] = null
+          draft[cur] = null
         })
         setSelected(null)
         return
@@ -313,7 +389,7 @@ export function CanvasStage() {
       if (!mv) return
       e.preventDefault()
       setScene((draft) => {
-        const block = draft[selected]
+        const block = draft[cur]
         if (block) {
           block.x = clamp(block.x + mv[0], 0, 100)
           block.y = clamp(block.y + mv[1], 0, 100)
@@ -322,7 +398,7 @@ export function CanvasStage() {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [scene, selected, setScene])
+  }, [scene, setScene, setSelected])
 
   return (
     <div className="flex h-full items-center justify-center overflow-auto p-6">
@@ -337,13 +413,20 @@ export function CanvasStage() {
         }}
       >
         <div className="relative touch-none select-none">
+          {!ready && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-muted/60">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <canvas
             ref={canvasRef}
             className="block rounded-md shadow-lg ring-1 ring-black/10"
           />
           <canvas
             ref={overlayRef}
-            className="absolute inset-0 block cursor-move rounded-md"
+            tabIndex={0}
+            aria-label="画布（点击选中元素，方向键微调）"
+            className="absolute inset-0 block cursor-move rounded-md outline-none"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={endDrag}

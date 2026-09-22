@@ -5,10 +5,10 @@
  * 缩略图由运行时离屏 drawScene 生成，与编辑器所见一致。
  */
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { type BestRatio, TEMPLATES, type Template } from "@/data/templates"
 import { ensureThumbnails, getCachedThumbnail } from "@/lib/render/thumbnails"
-import { cn } from "@/lib/utils"
 
 const SHOWCASE: BestRatio[] = ["2.35:1", "16:9", "1:1", "3:4"]
 
@@ -19,11 +19,13 @@ function GalleryThumb({ template }: { template: Template }) {
   useEffect(() => {
     if (dataUrl) return
     let cancelled = false
-    void ensureThumbnails([{ id: template.id, scene: template.scene }]).then(
-      () => {
+    void ensureThumbnails([{ id: template.id, scene: template.scene }])
+      .then(() => {
         if (!cancelled) setDataUrl(getCachedThumbnail(template.id) ?? null)
-      },
-    )
+      })
+      .catch(() => {
+        // 失败保持占位，不抛到 React
+      })
     return () => {
       cancelled = true
     }
@@ -52,6 +54,16 @@ function GalleryThumb({ template }: { template: Template }) {
 }
 
 export function TemplateGallery() {
+  // 第二张在 sm 以下被 CSS 隐藏：不挂载即不生成缩略图（P2）
+  const [showSecond, setShowSecond] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)")
+    setShowSecond(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setShowSecond(e.matches)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
   const groups = SHOWCASE.map((ratio) => ({
     ratio,
     items: TEMPLATES.filter((t) => t.bestRatio === ratio),
@@ -73,19 +85,20 @@ export function TemplateGallery() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {groups.map((g) => (
           <div key={g.ratio} className="flex flex-col gap-3">
-            {g.items.slice(0, 2).map((t, i) => (
-              <figure
-                key={t.id}
-                className={cn(
-                  "group flex flex-col gap-2",
-                  i > 0 && "hidden sm:flex",
-                )}
-              >
-                <GalleryThumb template={t} />
-                <figcaption className="text-xs text-muted-foreground">
-                  {t.name}
-                </figcaption>
-              </figure>
+            {g.items.slice(0, showSecond ? 2 : 1).map((t) => (
+              <div key={t.id} className="flex flex-col gap-2">
+                {/* P1-20：文案是「一键套用」，缩略图必须真能进编辑器 */}
+                <Link
+                  href={`/editor?template=${encodeURIComponent(t.id)}`}
+                  prefetch={false}
+                  className="group flex flex-col gap-2 rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/60"
+                >
+                  <GalleryThumb template={t} />
+                  <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">
+                    {t.name}
+                  </span>
+                </Link>
+              </div>
             ))}
           </div>
         ))}

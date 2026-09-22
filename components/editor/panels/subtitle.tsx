@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { createDefaultSubtitle } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 import { TextStyleEditor } from "./text-style-editor"
 
@@ -15,23 +16,7 @@ export function SubtitlePanel() {
         className="h-8"
         onClick={() =>
           setScene((draft) => {
-            draft.subtitle = {
-              text: "副标题",
-              autoFit: true,
-              maxWidthPct: 70,
-              x: 50,
-              y: 62,
-              fontFamily: "Maple Mono CN",
-              fontWeight: 400,
-              italic: false,
-              size: 40,
-              color: "#cbd5e1",
-              letterSpacing: 0,
-              lineHeight: 1.25,
-              align: "center",
-              uppercase: false,
-              shadow: 0,
-            }
+            draft.subtitle = createDefaultSubtitle()
           })
         }
       >
@@ -42,7 +27,6 @@ export function SubtitlePanel() {
   return (
     <div className="flex flex-col gap-3">
       <TextStyleEditor
-        slot="subtitle"
         style={scene.subtitle}
         onPatch={(patch) =>
           setScene((draft) => {

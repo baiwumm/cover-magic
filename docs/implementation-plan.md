@@ -53,7 +53,7 @@
 | D-32 | 临时占位：品牌资产删除后用极简 SVG 占位（避免 favicon 404），用户后续替换 |
 | D-33 | ✅ **字体子集产出采用方案 A，已完成（2026-09-20）**：`scripts/fetch-fonts.sh` 生成 `public/fonts/{maple-mono-cn-regular,maple-mono-cn-bold}.woff2`（合计 3.5MB，码位 6893 完全对齐，advance width 两字重一致）。本机工具链 Python 3.12.10 / fontTools 4.63.0 / brotli / pyftsubset 可用 |
 | D-34 | **全站 UI 字体 = Maple Mono CN**（2026-09-21 用户追加）：`app/globals.css` 的 `:root { --font-sans-stack / --font-mono-stack }` + `@theme inline { --font-sans / --font-mono }`，`body` 挂 `font-sans`。与封面渲染同族，落地页 / 编辑器 / 封面三处观感统一 |
-| D-35 | **字体 preload 上移到根布局**（D-34 的直接后果，**偏离 R-15 的「仅 /editor preload」**）：全站 UI 都要用它，且落地页本来就会为模板缩略图下载这两个 woff2，preload 只是提前发起、不增加字节。AGENTS.md R-15 原文待用户确认后同步修订 |
+| D-35 | **字体 preload 上移到根布局**（D-34 的直接后果）：全站 UI 都要用它，且落地页本来就会为模板缩略图下载这两个 woff2，preload 只是提前发起、不增加字节。AGENTS.md R-15 已同步修订（2026-09-22，P1-17） |
 | D-36 | **落地页光束改整页固定背景 + 主题切换接 `theme-switch-animation`**（2026-09-21 用户追加，参考 `E:\personal-project\theme-switch-animation\apps\docs`）：`LightRays` 挂在 `app/page.tsx` 作 `fixed inset-0 -z-10`（根容器 `relative isolate`）；新增 `components/theme/theme-toggle.tsx`，以**受控模式**（`isDark` + `onChange`）接 next-themes——class 与 localStorage 仍归 next-themes，库只管 View Transition 动画。navbar 与编辑器顶栏共用该按钮 |
 
 ---
@@ -373,9 +373,9 @@ export function drawScene(
 ---
 
 ### Phase 7 · 移动端策略与打磨
-- [ ] 7.1 `mobile-gate.tsx`：`/editor` 窄视口/触屏 → 「请在 PC 端使用」卡（含复制桌面链接），不做响应式编辑器
-- [ ] 7.2 快捷键面板（`?` 呼出）；焦点管理与 `aria-label`。**当前代码里没有任何 `ctrlKey/metaKey` 处理** → `Ctrl+Z` / `Ctrl+Shift+Z` 撤销重做需一并补（现在只有顶栏按钮，且焦点在输入框时应让位于原生撤销）
-- [ ] 7.3 空/错误态：Iconify 加载失败、字体不可用、上传格式错误
+- [x] 7.1 `mobile-gate.tsx`：`/editor` 窄视口/触屏 → 「请在 PC 端使用」卡（含复制桌面链接），不做响应式编辑器（2026-09-22 已实现：`components/editor/mobile-gate.tsx` + `app/editor/page.tsx` 分支）
+- [x] 7.2 快捷键面板（`?` 呼出）；焦点管理与 `aria-label`。`Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y` 已在 `lib/storage/history.ts`（输入框内让位原生）；`components/editor/help-dialog.tsx` + 顶栏按钮（2026-09-22）
+- [x] 7.3 空/错误态：Iconify 离线/无结果分流、上传格式与体积校验、导出失败 catch、autosave 配额 toast、分享解码失败提示（并入审查修复批次，2026-09-22）
 - [ ] 7.4 首屏性能：字体仅 `/editor` preload；`out/` 体积核查（R-16）
       → 实测遗留两点：① `/editor` 首屏 **CLS ≈ 0.10**（357ms 面板组重新分配宽度 0.054 + 484ms 画布容器从 340×190 撑到 1114×497 0.046），落地页为 0；② Chrome 报「preload 的字体几秒内未被使用」告警——字体只进 canvas、UI 文本不用它，属该启发式的误报，确认是否保留 preload 时再定。
 - [ ] 7.5 逐条回归 `docs/requirements.md` §3 的 B-01…B-13，在 §3 表格旁标注「已修」

@@ -27,7 +27,7 @@ const FAQS = [
 export function Faq() {
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-16">
-      <h2 className="mb-8 text-center text-3xl font-bold tracking-tight">
+      <h2 className="mb-8 text-center text-3xl font-bold tracking-tight md:text-4xl">
         常见问题
       </h2>
       <Accordion type="single" collapsible className="w-full">

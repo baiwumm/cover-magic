@@ -25,7 +25,8 @@ export interface Template {
 type TextData = TextStyle & TextBlock
 type WatermarkData = TextData & { opacity: number }
 
-/** 文本样式构造器（模块内私有，产物为纯数据） */
+/** 文本样式构造器（模块内私有，产物为纯数据）。
+ * 样式默认值引用 createDefaultScene().title（R-10 唯一来源，P2）。 */
 function textStyle(
   partial: Partial<TextStyle & TextBlock> & {
     text: string
@@ -33,19 +34,21 @@ function textStyle(
     y: number
   },
 ): TextData {
+  const def = createDefaultScene().title
+  if (!def) throw new Error("createDefaultScene().title 不应为 null")
   return {
-    autoFit: true,
-    maxWidthPct: 80,
-    fontFamily: "Maple Mono CN",
-    fontWeight: 700,
-    italic: false,
-    size: 96,
-    color: "#ffffff",
-    letterSpacing: 0,
-    lineHeight: 1.25,
-    align: "center",
-    uppercase: false,
-    shadow: 0,
+    autoFit: def.autoFit,
+    maxWidthPct: def.maxWidthPct,
+    fontFamily: def.fontFamily,
+    fontWeight: def.fontWeight,
+    italic: def.italic,
+    size: def.size,
+    color: def.color,
+    letterSpacing: def.letterSpacing,
+    lineHeight: def.lineHeight,
+    align: def.align,
+    uppercase: def.uppercase,
+    shadow: def.shadow,
     ...partial,
   }
 }

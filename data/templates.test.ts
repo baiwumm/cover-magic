@@ -31,7 +31,7 @@ function assertTextFits(
     fontPx: block.size,
     maxWidthPx,
     lineHeight: block.lineHeight,
-    maxLines: 3, // 模板标题/副标题不应超过 3 行
+    // 不传 maxLines：与运行时一致走 autoFit 段落数上限（P2，修假绿）
     autoFit: block.autoFit,
     measure: roughMeasure,
     minScale: 0.5,

@@ -46,7 +46,7 @@ export function Footer() {
           </a>
         </div>
         <p>
-          © {year} {siteConfig.name} · Built by {siteConfig.author.name}
+          © {year} {siteConfig.name} · 由 {siteConfig.author.name} 构建
         </p>
       </div>
     </footer>

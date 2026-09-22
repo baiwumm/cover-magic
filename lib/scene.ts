@@ -3,6 +3,8 @@
  * 所有 px 值以画布高度 1080 为基准（R-3），渲染时 scale = canvasHeight / 1080。
  */
 
+import { WATERMARK_DEFAULT_TEXT } from "@/constants/site"
+
 export type Ratio = { w: number; h: number }
 
 export type Background =
@@ -120,7 +122,7 @@ export function createDefaultScene(): Scene {
       shadow: 0,
     },
     watermark: {
-      text: "@baiwumm",
+      text: WATERMARK_DEFAULT_TEXT,
       autoFit: false,
       maxWidthPct: 40,
       x: 92,
@@ -137,5 +139,56 @@ export function createDefaultScene(): Scene {
       shadow: 0,
       opacity: 0.8,
     },
+  }
+}
+
+/** logo 尺寸范围（基准 px）：画布手柄与面板滑块共用（P1-12） */
+export const LOGO_SIZE_RANGE: [number, number] = [40, 800]
+
+/** 恢复被移除的副标题：默认值唯一来源（R-10 / P1-7） */
+export function createDefaultSubtitle(): NonNullable<Scene["subtitle"]> {
+  const s = createDefaultScene().subtitle
+  if (!s) throw new Error("createDefaultScene().subtitle 不应为 null")
+  return structuredClone(s)
+}
+
+/** 恢复被移除的水印：默认值唯一来源（R-10 / P1-7 / D-26） */
+export function createDefaultWatermark(): NonNullable<Scene["watermark"]> {
+  const w = createDefaultScene().watermark
+  if (!w) throw new Error("createDefaultScene().watermark 不应为 null")
+  return structuredClone(w)
+}
+
+/** 背景类型切换时的默认配置（R-10 / P1-7） */
+export function createDefaultBackground(kind: Background["kind"]): Background {
+  const bg = createDefaultScene().background
+  if (bg.kind === kind) return structuredClone(bg)
+  if (kind === "color") return { kind: "color", color: "#0f172a" }
+  if (kind === "gradient")
+    return { kind: "gradient", from: "#1e293b", to: "#0f172a", angle: 135 }
+  return {
+    kind: "image",
+    dataUrl: "",
+    fit: "cover",
+    blur: 0,
+    overlay: 0,
+    overlayColor: "#000000",
+  }
+}
+
+/**
+ * 载入外部 Scene（分享 hash / 存档）后对齐导出宽高比（R-4）。
+ * hash 可携带 exportSize 与 ratio 分叉的场景；预览按 ratio、导出按
+ * exportSize，两者比例必须一致，否则所见非所得。
+ */
+export function alignExportSize(scene: Scene): Scene {
+  const { w, h } = scene.ratio
+  const { width, height } = scene.exportSize
+  if (w <= 0 || h <= 0 || width <= 0 || height <= 0) return scene
+  const target = (width * h) / w
+  if (Math.abs(height - target) < 0.5) return scene
+  return {
+    ...scene,
+    exportSize: { width, height: Math.max(1, Math.round(target)) },
   }
 }

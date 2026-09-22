@@ -57,13 +57,14 @@ export async function searchIcons(
       `${API}/search?query=${encodeURIComponent(q)}&limit=${limit}`,
       { signal },
     )
-    if (!res.ok) return []
+    if (!res.ok) throw new Error(`Iconify HTTP ${res.status}`)
     const data = (await res.json()) as { icons?: string[] }
     const icons = data.icons ?? []
     searchCache.set(cacheKey, icons)
     return icons
   } catch (e) {
+    // 非中止的失败一律上抛：UI 区分「网络不可用」与「无结果」（P2）
     if (e instanceof DOMException && e.name === "AbortError") throw e
-    return []
+    throw e instanceof Error ? e : new Error("Iconify 请求失败")
   }
 }

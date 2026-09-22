@@ -5,8 +5,12 @@
  */
 
 import type { Scene } from "@/lib/scene"
+import { isLegalScene } from "@/lib/storage/autosave"
 
 const PREFIX = "s="
+
+/** 完整分享 URL 超过该长度时警告（多数场景/IM 截断阈值约 8k） */
+export const SHARE_URL_WARN_LENGTH = 8000
 
 function toBase64Url(bytes: Uint8Array): string {
   let bin = ""
@@ -38,6 +42,10 @@ async function inflate(data: Uint8Array): Promise<Uint8Array | null> {
   return new Uint8Array(buf)
 }
 
+/**
+ * 序列化 Scene 进 hash。含 dataURL 的场景可能超 URL 上限，
+ * 调用方用 `SHARE_URL_WARN_LENGTH` 检查完整 URL 长度并提示用户（P1-23）。
+ */
 export async function encodeSceneToHash(scene: Scene): Promise<string> {
   const json = JSON.stringify(scene)
   const raw = new TextEncoder().encode(json)
@@ -65,8 +73,8 @@ export async function decodeSceneFromHash(hash: string): Promise<Scene | null> {
     } else {
       return null
     }
-    const scene = JSON.parse(json) as Scene
-    if (!scene || scene.version !== 2) return null
+    const scene = JSON.parse(json) as unknown
+    if (!isLegalScene(scene)) return null
     return scene
   } catch {
     return null

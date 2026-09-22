@@ -37,8 +37,9 @@ const FEATURES = [
   },
   {
     icon: Feather,
-    title: "轻量离线优先",
-    description: "纯静态部署、数据只存本地浏览器，字体子集化自托管，打开即用。",
+    title: "本地优先",
+    description:
+      "纯静态部署、数据只存本地浏览器，字体子集化自托管，打开即用、不上传服务器。",
   },
   {
     icon: Share2,
@@ -51,11 +52,14 @@ const FEATURES = [
 export function Features() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-16">
+      <h2 className="mb-10 text-center text-3xl font-bold tracking-tight md:text-4xl">
+        为什么选 Cover Magic
+      </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f) => (
           <Card
             key={f.title}
-            className="rounded-2xl border-dashed bg-background/50 transition-colors hover:bg-accent/40"
+            className="rounded-2xl border-dashed bg-background/50"
           >
             <CardHeader>
               <f.icon className="size-5 text-muted-foreground" />

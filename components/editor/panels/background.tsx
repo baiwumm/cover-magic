@@ -1,17 +1,24 @@
 "use client"
 
+import { useRef } from "react"
 import { AssetDropzone } from "@/components/controls/asset-dropzone"
 import { ColorField } from "@/components/controls/color-field"
 import { SelectField } from "@/components/controls/select-field"
 import { SliderField } from "@/components/controls/slider-field"
 import { SwitchField } from "@/components/controls/switch-field"
 import { Separator } from "@/components/ui/separator"
+import type { Background } from "@/lib/scene"
+import { createDefaultBackground } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
+
+/** 遮罩关闭时记住自定义强度，重开恢复而非写死 0.35（P2） */
+const DEFAULT_OVERLAY = 0.35
 
 export function BackgroundPanel() {
   const scene = useSceneStore((s) => s.scene)
   const setScene = useSceneStore((s) => s.setScene)
   const bg = scene.background
+  const lastOverlayRef = useRef(DEFAULT_OVERLAY)
 
   return (
     <div className="flex flex-col gap-3">
@@ -24,26 +31,10 @@ export function BackgroundPanel() {
           { value: "image", label: "图片" },
         ]}
         onChange={(kind) => {
+          const next = kind as Background["kind"]
           setScene((draft) => {
-            const d = draft.background
-            if (kind === "color" && d.kind !== "color") {
-              draft.background = { kind: "color", color: "#0f172a" }
-            } else if (kind === "gradient" && d.kind !== "gradient") {
-              draft.background = {
-                kind: "gradient",
-                from: "#1e293b",
-                to: "#0f172a",
-                angle: 135,
-              }
-            } else if (kind === "image" && d.kind !== "image") {
-              draft.background = {
-                kind: "image",
-                dataUrl: "",
-                fit: "cover",
-                blur: 0,
-                overlay: 0,
-                overlayColor: "#000000",
-              }
+            if (draft.background.kind !== next) {
+              draft.background = createDefaultBackground(next)
             }
           })
         }}
@@ -144,12 +135,17 @@ export function BackgroundPanel() {
           <SwitchField
             label="遮罩"
             checked={bg.overlay > 0}
-            onCheckedChange={(on) =>
+            onCheckedChange={(on) => {
+              if (bg.overlay > 0) lastOverlayRef.current = bg.overlay
               setScene((draft) => {
-                if (draft.background.kind === "image")
-                  draft.background.overlay = on ? 0.35 : 0
+                if (draft.background.kind !== "image") return
+                draft.background.overlay = on
+                  ? lastOverlayRef.current > 0
+                    ? lastOverlayRef.current
+                    : DEFAULT_OVERLAY
+                  : 0
               })
-            }
+            }}
           />
           {bg.overlay > 0 && (
             <>
@@ -169,12 +165,13 @@ export function BackgroundPanel() {
                 min={0}
                 max={1}
                 step={0.05}
-                onChange={(overlay) =>
+                onChange={(overlay) => {
+                  if (overlay > 0) lastOverlayRef.current = overlay
                   setScene((draft) => {
                     if (draft.background.kind === "image")
                       draft.background.overlay = overlay
                   })
-                }
+                }}
               />
             </>
           )}
