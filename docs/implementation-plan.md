@@ -2,7 +2,7 @@
 
 > **本文件是自包含的执行输入。** 在新窗口打开项目时，只需说「按 `docs/implementation-plan.md` 从 Phase N 开始执行」即可接手，不依赖任何历史对话。
 > 配套阅读顺序：`AGENTS.md`（约束，自动加载）→ 本文件（任务）→ `docs/requirements.md`（背景与证据）。
-> 状态：**Phase 0–8.5 已完成并提交**（Phase 6 于 2026-09-21 过质量门；Phase 7 审查修复 `3c53fad`；Phase 8 部署配置 `8767d75`），**8.6 `2.0.0` release 待用户明确指令**。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
+> 状态：**Phase 0–8.5 已完成并提交**（Phase 6 于 2026-09-21 过质量门；Phase 7 审查修复 `3c53fad`；Phase 8 部署配置 `8767d75`），**全局 DoD 1–5 于 2026-09-22 真实浏览器验收全绿**（`.accept-dod.mjs`，CDP 视口 1440×900，PASS 23 / FAIL 0），**8.6 `2.0.0` release 待用户明确指令**。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
 
 ---
 
@@ -403,6 +403,11 @@ export function drawScene(
 ---
 
 ## 5. 全局完成定义（DoD）
+
+> **验收记录（2026-09-22）**：`.accept-dod.mjs`（headless Chrome CDP，视口 1440×900）**PASS 23 / FAIL 0**。
+> - DoD-3：同尺寸 `drawScene` 复现 vs 预览逐像素 diff=0；跨分辨率（1074×457 vs 900×383）归一后 meanCh≈0.37、pct≈0.85%（重采样 AA，阈值 meanCh&lt;1、pct&lt;2%）
+> - DoD-4：自定义 + 14 平台预设全部通过（ratio / canvas 比例 / 导出 blob / rects 无溢出）
+> - DoD-5a/b/c/d：刷新恢复、清存储后分享链接还原、深浅色切换、撤销到最早（按钮置灰）均通过；验收期间 0 控制台错误
 
 1. `pnpm lint` / `pnpm test` / `pnpm build` 全绿，`out/` 可直接被 Workers Assets 托管。
 2. `docs/requirements.md` §3 的 13 条缺陷逐条标注处理结果，其中 B-01/B-02/B-03 必须「已修」。
