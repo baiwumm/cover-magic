@@ -2,11 +2,13 @@
 
 /**
  * 落地页模板画廊（4.4）：复用同一份模板数据与同一渲染器（R-1）。
- * 缩略图由运行时离屏 drawScene 生成，与编辑器所见一致。
+ * 缩略图由运行时离屏 drawScene 生成，与编辑器所见一致；卡片带 beUI TiltCard 倾斜。
  */
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { Loader } from "@/components/motion/loader"
+import { TiltCard } from "@/components/motion/tilt-card"
 import { type BestRatio, TEMPLATES, type Template } from "@/data/templates"
 import { ensureThumbnails, getCachedThumbnail } from "@/lib/render/thumbnails"
 
@@ -33,7 +35,7 @@ function GalleryThumb({ template }: { template: Template }) {
 
   return (
     <div
-      className="overflow-hidden rounded-xl border border-border bg-muted/40"
+      className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40"
       style={{
         aspectRatio: `${template.scene.ratio.w} / ${template.scene.ratio.h}`,
       }}
@@ -44,10 +46,14 @@ function GalleryThumb({ template }: { template: Template }) {
           src={dataUrl}
           alt={template.name}
           loading="lazy"
-          className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className="size-full object-cover"
         />
       ) : (
-        <div className="size-full animate-pulse bg-muted" />
+        <Loader
+          size={20}
+          label="生成缩略图"
+          className="text-muted-foreground"
+        />
       )}
     </div>
   )
@@ -88,16 +94,18 @@ export function TemplateGallery() {
             {g.items.slice(0, showSecond ? 2 : 1).map((t) => (
               <div key={t.id} className="flex flex-col gap-2">
                 {/* P1-20：文案是「一键套用」，缩略图必须真能进编辑器 */}
-                <Link
-                  href={`/editor?template=${encodeURIComponent(t.id)}`}
-                  prefetch={false}
-                  className="group flex flex-col gap-2 rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/60"
-                >
-                  <GalleryThumb template={t} />
-                  <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">
-                    {t.name}
-                  </span>
-                </Link>
+                <TiltCard max={6} className="rounded-xl">
+                  <Link
+                    href={`/editor?template=${encodeURIComponent(t.id)}`}
+                    prefetch={false}
+                    className="group flex flex-col gap-2 p-1.5 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring/60"
+                  >
+                    <GalleryThumb template={t} />
+                    <span className="px-0.5 pb-0.5 text-xs text-muted-foreground transition-colors group-hover:text-foreground">
+                      {t.name}
+                    </span>
+                  </Link>
+                </TiltCard>
               </div>
             ))}
           </div>

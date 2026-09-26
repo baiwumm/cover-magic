@@ -1,9 +1,6 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+"use client"
+
+import { BouncyAccordion } from "@/components/motion/bouncy-accordion"
 
 const FAQS = [
   {
@@ -30,18 +27,19 @@ export function Faq() {
       <h2 className="mb-8 text-center text-3xl font-bold tracking-tight md:text-4xl">
         常见问题
       </h2>
-      <Accordion type="single" collapsible className="w-full">
-        {FAQS.map((f, i) => (
-          <AccordionItem key={f.q} value={`item-${i}`}>
-            <AccordionTrigger className="text-left text-sm">
-              {f.q}
-            </AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground">
-              {f.a}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+      <BouncyAccordion
+        collapsible
+        items={FAQS.map((f, i) => ({
+          id: `item-${i}`,
+          title: f.q,
+          description: f.a,
+        }))}
+        className="w-full"
+        classNames={{
+          title: "text-sm",
+          description: "text-sm text-muted-foreground",
+        }}
+      />
     </section>
   )
 }

@@ -8,7 +8,7 @@ import {
   Ruler,
   Share2,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TiltCard } from "@/components/motion/tilt-card"
 
 const FEATURES = [
   {
@@ -57,18 +57,17 @@ export function Features() {
       </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f) => (
-          <Card
+          <TiltCard
             key={f.title}
-            className="rounded-2xl border-dashed bg-background/50"
+            max={7}
+            className="rounded-2xl border border-dashed border-border bg-background/60 backdrop-blur-sm"
           >
-            <CardHeader>
+            <div className="flex flex-col gap-2.5 p-5">
               <f.icon className="size-5 text-muted-foreground" />
-              <CardTitle className="text-base">{f.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {f.description}
-            </CardContent>
-          </Card>
+              <h3 className="text-base font-semibold">{f.title}</h3>
+              <p className="text-sm text-muted-foreground">{f.description}</p>
+            </div>
+          </TiltCard>
         ))}
       </div>
     </section>

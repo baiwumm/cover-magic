@@ -1,14 +1,14 @@
 "use client"
 
 import { ArrowRight, Github, Sparkles } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { LinkButton } from "@/components/landing/link-button"
 import { siteConfig } from "@/constants/site"
 import { TextGenerateEffect } from "./text-generate-effect"
 
 /**
  * Hero（6.3 / D-15）：徽章 → 主标题 → 副文案 → 双按钮 → 产品截图。
  * ogl 光束背景已上移到 app/page.tsx 作为整页固定层。
+ * CTA 换 beUI ButtonLink（弹簧按压 + 悬停微放大），SPA 导航由 LinkButton 承担。
  */
 export function Hero() {
   return (
@@ -37,30 +37,28 @@ export function Hero() {
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg" className="rounded-full px-6">
-            <Link href="/editor" prefetch={false}>
-              开始设计
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-          <Button
-            asChild
+          <LinkButton
+            href="/editor"
+            size="lg"
+            className="gap-2 rounded-full px-6"
+          >
+            开始设计
+            <ArrowRight className="size-4" />
+          </LinkButton>
+          <LinkButton
+            href={siteConfig.links.repository}
+            target="_blank"
+            rel="noreferrer"
             size="lg"
             variant="outline"
-            className="rounded-full px-6"
+            className="gap-2 rounded-full px-6"
           >
-            <a
-              href={siteConfig.links.repository}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Github className="size-4" />
-              GitHub
-            </a>
-          </Button>
+            <Github className="size-4" />
+            GitHub
+          </LinkButton>
         </div>
 
-        <div className="mt-8 w-full overflow-hidden rounded-xl border border-dashed border-border shadow-2xl">
+        <div className="mt-8 w-full overflow-hidden rounded-2xl border border-dashed border-border shadow-2xl">
           {/* biome-ignore lint/performance/noImgElement: R-14 原生 img + 预压缩静态资源 */}
           <img
             src="/showcase.webp"

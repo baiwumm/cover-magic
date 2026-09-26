@@ -1,5 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
 const STEPS = [
   {
     step: "01",
@@ -18,6 +16,7 @@ const STEPS = [
   },
 ] as const
 
+/** beUI 卡面语言：虚线描边 + 圆角 2xl + 发丝分隔，纯静态保持服务端渲染 */
 export function Steps() {
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-16">
@@ -26,17 +25,16 @@ export function Steps() {
       </h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {STEPS.map((s) => (
-          <Card key={s.step} className="rounded-2xl border-dashed">
-            <CardHeader>
-              <span className="font-mono text-3xl font-bold text-muted-foreground">
-                {s.step}
-              </span>
-              <CardTitle className="text-base">{s.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {s.description}
-            </CardContent>
-          </Card>
+          <div
+            key={s.step}
+            className="flex flex-col gap-2.5 rounded-2xl border border-dashed border-border bg-background/60 p-5 backdrop-blur-sm"
+          >
+            <span className="font-mono text-3xl font-bold text-muted-foreground">
+              {s.step}
+            </span>
+            <h3 className="text-base font-semibold">{s.title}</h3>
+            <p className="text-sm text-muted-foreground">{s.description}</p>
+          </div>
         ))}
       </div>
     </section>
