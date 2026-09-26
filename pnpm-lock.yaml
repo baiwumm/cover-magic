@@ -11,6 +11,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.8.0
         version: 1.8.0(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@floating-ui/dom':
+        specifier: ^1.8.0
+        version: 1.8.0
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3

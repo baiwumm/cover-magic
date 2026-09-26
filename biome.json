@@ -43,6 +43,28 @@
       "assist": {
         "enabled": false
       }
+    },
+    {
+      "includes": [
+        "components/motion/**",
+        "lib/ease.ts",
+        "lib/presence-gate.tsx",
+        "lib/touch.ts",
+        "lib/hooks/use-dismiss.ts",
+        "lib/hooks/use-hover-capable.ts",
+        "lib/hooks/use-hover-gesture.ts",
+        "lib/hooks/use-slider.ts",
+        "lib/hooks/use-tap-gesture.ts"
+      ],
+      "linter": {
+        "enabled": false
+      },
+      "formatter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
     }
   ],
   "assist": {
