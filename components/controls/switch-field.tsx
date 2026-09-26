@@ -1,6 +1,6 @@
 "use client"
 
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/switch"
 
 interface SwitchFieldProps {
   label: string
@@ -19,7 +19,7 @@ export function SwitchField({
       <Switch
         checked={checked}
         onCheckedChange={onCheckedChange}
-        aria-label={label}
+        ariaLabel={label}
       />
     </div>
   )

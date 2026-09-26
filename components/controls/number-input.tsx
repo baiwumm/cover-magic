@@ -2,10 +2,12 @@
 
 /**
  * 数字输入：本地 draft + blur/Enter 提交，避免逐键 clamp 把清空变成 min（P1-11）。
+ * 底座为 beUI Input（胶囊场域），尺寸由 classNames 压缩到编辑器密度。
  */
 
 import { useEffect, useState } from "react"
-import { Input } from "@/components/ui/input"
+import type { InputClassNames } from "@/components/motion/input"
+import { Input } from "@/components/motion/input"
 
 interface NumberInputProps {
   value: number
@@ -14,6 +16,7 @@ interface NumberInputProps {
   step?: number
   disabled?: boolean
   className?: string
+  classNames?: InputClassNames
   "aria-label"?: string
   onCommit: (v: number) => void
 }
@@ -25,6 +28,7 @@ export function NumberInput({
   step,
   disabled,
   className,
+  classNames,
   "aria-label": ariaLabel,
   onCommit,
 }: NumberInputProps) {
@@ -60,10 +64,11 @@ export function NumberInput({
       step={step}
       disabled={disabled}
       className={className}
+      classNames={classNames}
       onFocus={() => setEditing(true)}
-      onChange={(e) => {
+      onChange={(next) => {
         setEditing(true)
-        setDraft(e.target.value)
+        setDraft(next)
       }}
       onBlur={commit}
       onKeyDown={(e) => {

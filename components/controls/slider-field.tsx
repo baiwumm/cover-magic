@@ -1,13 +1,15 @@
 "use client"
 
 /**
- * 滑块控件：shadcn Slider + 数值显示 + 单位。仅用于一维标量（字号/透明度/模糊等），
- * 元素定位禁止使用 XY 滑块（R-20，靠画布拖拽）。
- * 数值框走 NumberInput（draft + blur/Enter 提交，P1-11）。
+ * 滑块控件：beUI FluidSlider 轨道 + 数值显示 + 单位。仅用于一维标量（字号/
+ * 透明度/模糊等），元素定位禁止使用 XY 滑块（R-20，靠画布拖拽）。
+ * 数值框走 NumberInput（draft + blur/Enter 提交，P1-11）；
+ * 轨道内嵌的值文本留空（format 返回空串），避免与 NumberInput 重复显示，
+ * 读屏文案仍由 formatValueText 提供带单位读数。
  */
 
 import { NumberInput } from "@/components/controls/number-input"
-import { Slider } from "@/components/ui/slider"
+import { FluidSlider } from "@/components/motion/range-slider-fluid"
 
 interface SliderFieldProps {
   label: string
@@ -31,7 +33,7 @@ export function SliderField({
   disabled,
 }: SliderFieldProps) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">{label}</span>
         <div className="flex items-center gap-1">
@@ -42,21 +44,24 @@ export function SliderField({
             step={step}
             disabled={disabled}
             onCommit={onChange}
-            className="h-7 w-16 px-1.5 text-right text-xs"
+            className="w-16"
+            classNames={{ field: "h-7", input: "px-2 text-right text-xs" }}
           />
           {unit && (
             <span className="w-6 text-xs text-muted-foreground">{unit}</span>
           )}
         </div>
       </div>
-      <Slider
-        value={[value]}
+      <FluidSlider
+        value={value}
         min={min}
         max={max}
         step={step}
         disabled={disabled}
-        onValueChange={(v) => onChange(v[0])}
         aria-label={label}
+        format={() => ""}
+        formatValueText={(v) => `${v}${unit ?? ""}`}
+        className="h-7"
       />
     </div>
   )

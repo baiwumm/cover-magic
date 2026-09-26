@@ -1,21 +1,14 @@
 "use client"
 
 /**
- * 拖拽上传（D-05）：react-dropzone 处理拖拽事件 + shadcn Item 呈现，
- * 不手写 dragenter/dragleave 逻辑（R-18）。
+ * 拖拽上传（D-05）：react-dropzone 处理拖拽事件（R-18 不手写 DnD 逻辑），
+ * 外观按 beUI 面板语言呈现（虚线胶囊 + 圆形图标位）。
  */
 
 import { ImagePlus, Loader2 } from "lucide-react"
 import { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
-import { toast } from "sonner"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
+import { toast } from "@/components/toast/toast"
 import { fileToDownsampledDataUrl } from "@/lib/image"
 import { cn } from "@/lib/utils"
 
@@ -91,30 +84,29 @@ export function AssetDropzone({
       })}
     >
       <input {...getInputProps()} />
-      <Item
-        variant={isDragActive ? "outline" : "muted"}
-        size="sm"
+      <div
         className={cn(
-          "transition-colors",
-          isDragActive && "border-foreground/40 bg-accent",
+          "flex items-center gap-3 rounded-xl border border-dashed px-3 py-2.5 transition-colors",
+          "border-(--color-border-strong) bg-muted/40 hover:bg-muted/70",
+          isDragActive && "border-foreground/50 bg-accent",
         )}
       >
-        <ItemMedia variant="icon">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-background text-muted-foreground ring-1 ring-border">
           {busy ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-3.5 animate-spin" />
           ) : (
-            <ImagePlus className="size-4" />
+            <ImagePlus className="size-3.5" />
           )}
-        </ItemMedia>
-        <ItemContent>
-          <ItemTitle className="text-xs">
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-xs font-medium">
             {isDragActive ? "松开即可上传" : label}
-          </ItemTitle>
-          <ItemDescription className="text-[11px]">
+          </span>
+          <span className="text-[11px] text-muted-foreground">
             支持 PNG / JPG / WebP / SVG
-          </ItemDescription>
-        </ItemContent>
-      </Item>
+          </span>
+        </span>
+      </div>
     </div>
   )
 }

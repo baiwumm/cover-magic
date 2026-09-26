@@ -1,18 +1,18 @@
 "use client"
 
 /**
- * 取色器（D-04）：react-colorful 本体 + shadcn Popover 浮层 + 40 色板 + hex 输入。
+ * 取色器（D-04）：react-colorful 本体 + beUI Popover 浮层 + 40 色板 + hex 输入。
  * 官方注册表无取色器，引专门库 —— 不属于自绘取色器（R-18）。
  */
 
 import { useEffect, useState } from "react"
 import { HexColorPicker } from "react-colorful"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/motion/input"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/motion/popover"
 import { cn } from "@/lib/utils"
 
 const PALETTE = [
@@ -85,20 +85,23 @@ export function ColorField({ label, value, onChange, id }: ColorFieldProps) {
       <span id={id} className="text-xs text-muted-foreground">
         {label}
       </span>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          className={cn(
-            "flex h-8 w-36 items-center gap-2 rounded-md border border-input bg-background px-2 text-xs",
-            "hover:bg-accent",
-          )}
-        >
-          <span
-            className="size-4 shrink-0 rounded-sm border border-border"
-            style={{ backgroundColor: value }}
-          />
-          <span className="font-mono uppercase">{value}</span>
+      <Popover open={open} onOpenChange={setOpen} align="end">
+        <PopoverTrigger>
+          <button
+            type="button"
+            className={cn(
+              "flex h-8 w-36 items-center gap-2 rounded-full border border-input bg-background px-2.5 text-xs",
+              "transition-colors hover:border-(--color-border-strong)",
+            )}
+          >
+            <span
+              className="size-4 shrink-0 rounded-full border border-border"
+              style={{ backgroundColor: value }}
+            />
+            <span className="font-mono uppercase">{value}</span>
+          </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="end">
+        <PopoverContent className="w-64 p-3">
           <HexColorPicker color={value} onChange={onChange} />
           <div className="mt-3 grid grid-cols-10 gap-1">
             {PALETTE.map((c) => (
@@ -107,7 +110,7 @@ export function ColorField({ label, value, onChange, id }: ColorFieldProps) {
                 type="button"
                 aria-label={`选用颜色 ${c}`}
                 className={cn(
-                  "size-4 rounded-sm border transition-transform hover:scale-110",
+                  "size-4 rounded-full border transition-transform hover:scale-110",
                   value.toLowerCase() === c.toLowerCase()
                     ? "border-foreground"
                     : "border-border",
@@ -120,12 +123,17 @@ export function ColorField({ label, value, onChange, id }: ColorFieldProps) {
           <div className="mt-3 flex items-center gap-2">
             <Input
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              onChange={setDraft}
               onBlur={() => commitHex(draft)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") commitHex(draft)
               }}
-              className="h-7 font-mono text-xs uppercase"
+              aria-label="十六进制颜色"
+              className="w-full"
+              classNames={{
+                field: "h-7",
+                input: "px-2 font-mono text-xs uppercase",
+              }}
             />
           </div>
         </PopoverContent>
