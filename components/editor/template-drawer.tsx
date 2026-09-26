@@ -2,22 +2,15 @@
 
 /**
  * 模板抽屉（4.3）：按 bestRatio 分组 + 缩略图网格，点击整体套用（R-11）。
+ * 底座为 beUI Drawer（右侧弹簧滑入）；缩略图占位用 beUI Loader。
  */
 
-import { LayoutGrid } from "lucide-react"
+import { LayoutGrid, X } from "lucide-react"
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/motion/button"
+import { Drawer } from "@/components/motion/drawer"
+import { Loader } from "@/components/motion/loader"
+import { toast } from "@/components/toast/toast"
 import { type BestRatio, TEMPLATES, type Template } from "@/data/templates"
 import { ensureThumbnails, getCachedThumbnail } from "@/lib/render/thumbnails"
 import { cn } from "@/lib/utils"
@@ -44,7 +37,7 @@ function TemplateThumb({ template }: { template: Template }) {
         if (!cancelled) setDataUrl(getCachedThumbnail(template.id) ?? null)
       })
       .catch(() => {
-        // 失败保持 Skeleton，不抛到 React
+        // 失败保持占位 Loader，不抛到 React
       })
     return () => {
       cancelled = true
@@ -53,12 +46,18 @@ function TemplateThumb({ template }: { template: Template }) {
 
   if (!dataUrl) {
     return (
-      <Skeleton
-        className="w-full rounded-md"
+      <div
+        className="flex w-full items-center justify-center rounded-xl bg-muted/60"
         style={{
           aspectRatio: `${template.scene.ratio.w} / ${template.scene.ratio.h}`,
         }}
-      />
+      >
+        <Loader
+          size={18}
+          label="生成缩略图"
+          className="text-muted-foreground"
+        />
+      </div>
     )
   }
   return (
@@ -67,7 +66,7 @@ function TemplateThumb({ template }: { template: Template }) {
       src={dataUrl}
       alt={template.name}
       loading="lazy"
-      className="w-full rounded-md ring-1 ring-border"
+      className="w-full rounded-xl ring-1 ring-border"
     />
   )
 }
@@ -87,22 +86,41 @@ export function TemplateDrawer() {
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs">
-          <LayoutGrid className="size-3.5" />
-          模板
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[420px] sm:max-w-[420px] p-0">
-        <SheetHeader className="px-4 pt-4">
-          <SheetTitle className="text-base">模板</SheetTitle>
-          <SheetDescription className="text-xs">
-            点击套用将整体替换当前设计（含全部参数）。
-          </SheetDescription>
-        </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-6rem)]">
-          <div className="flex flex-col gap-5 px-4 pb-6">
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 shrink-0 gap-1 whitespace-nowrap rounded-full px-3 text-xs"
+        onClick={() => setOpen(true)}
+      >
+        <LayoutGrid className="size-3.5" />
+        模板
+      </Button>
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        side="right"
+        ariaLabel="模板"
+        className="w-[420px] max-w-[85vw]"
+      >
+        <div className="flex items-start justify-between gap-3 px-4 pt-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-base font-semibold">模板</h2>
+            <p className="text-xs text-muted-foreground">
+              点击套用将整体替换当前设计（含全部参数）。
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="关闭模板抽屉"
+            onClick={() => setOpen(false)}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+        <div className="mt-3 min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+          <div className="flex flex-col gap-5">
             {RATIO_ORDER.map((ratio) => {
               const group = TEMPLATES.filter((t) => t.bestRatio === ratio)
               if (!group.length) return null
@@ -118,7 +136,7 @@ export function TemplateDrawer() {
                         type="button"
                         onClick={() => apply(t)}
                         className={cn(
-                          "group flex flex-col gap-1.5 rounded-lg p-1.5 text-left transition-colors hover:bg-accent",
+                          "group flex flex-col gap-1.5 rounded-xl p-1.5 text-left transition-colors hover:bg-accent",
                           currentId === t.id && "bg-accent ring-1 ring-ring",
                         )}
                       >
@@ -131,8 +149,8 @@ export function TemplateDrawer() {
               )
             })}
           </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+        </div>
+      </Drawer>
+    </>
   )
 }

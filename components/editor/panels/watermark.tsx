@@ -1,7 +1,7 @@
 "use client"
 
 import { SliderField } from "@/components/controls/slider-field"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/motion/button"
 import { createDefaultWatermark } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 import { TextStyleEditor } from "./text-style-editor"
@@ -18,7 +18,7 @@ export function WatermarkPanel() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8"
+        className="h-8 rounded-full"
         onClick={() =>
           setScene((draft) => {
             draft.watermark = createDefaultWatermark()
@@ -56,7 +56,7 @@ export function WatermarkPanel() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8"
+        className="h-8 rounded-full"
         onClick={() =>
           setScene((draft) => {
             draft.watermark = null

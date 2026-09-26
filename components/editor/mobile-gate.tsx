@@ -7,7 +7,7 @@
 
 import { MonitorSmartphone } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button, ButtonLink } from "@/components/motion/button"
 
 /** 窄于该宽度视为不适合编辑的视口 */
 const NARROW_PX = 768
@@ -66,9 +66,9 @@ export function MobileGate() {
         >
           复制桌面链接
         </Button>
-        <Button asChild size="sm" variant="ghost">
-          <a href="/">返回首页</a>
-        </Button>
+        <ButtonLink href="/" size="sm" variant="ghost">
+          返回首页
+        </ButtonLink>
       </div>
     </main>
   )

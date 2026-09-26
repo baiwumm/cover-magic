@@ -11,7 +11,7 @@ import { SelectField } from "@/components/controls/select-field"
 import { SliderField } from "@/components/controls/slider-field"
 import { SwitchField } from "@/components/controls/switch-field"
 import { TextareaField } from "@/components/controls/textarea-field"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tabs, TabsList, TabsTrigger } from "@/components/motion/tabs"
 import type { TextStyle } from "@/lib/scene"
 
 export type TextSlot = "title" | "subtitle" | "watermark"
@@ -70,25 +70,35 @@ export function TextStyleEditor({
         />
         <div className="flex flex-col justify-end gap-1.5">
           <span className="text-xs text-muted-foreground">对齐</span>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
+          {/* beUI 无 ToggleGroup：对齐用 segment Tabs 承担（单选、指示器滑动） */}
+          <Tabs
             value={style.align}
             onValueChange={(v) =>
               v && onPatch({ align: v as TextStyle["align"] })
             }
+            variant="segment"
           >
-            <ToggleGroupItem value="left" aria-label="左对齐">
-              左
-            </ToggleGroupItem>
-            <ToggleGroupItem value="center" aria-label="居中">
-              中
-            </ToggleGroupItem>
-            <ToggleGroupItem value="right" aria-label="右对齐">
-              右
-            </ToggleGroupItem>
-          </ToggleGroup>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger
+                value="left"
+                className="h-7 w-full justify-center px-0 py-0 text-xs"
+              >
+                左
+              </TabsTrigger>
+              <TabsTrigger
+                value="center"
+                className="h-7 w-full justify-center px-0 py-0 text-xs"
+              >
+                中
+              </TabsTrigger>
+              <TabsTrigger
+                value="right"
+                className="h-7 w-full justify-center px-0 py-0 text-xs"
+              >
+                右
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
       <SliderField

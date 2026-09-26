@@ -2,23 +2,26 @@
 
 /**
  * 顶栏（2.5/2.7）：平台预设 / 尺寸（解锁输入，R-21）/ 撤销重做 / 深浅色 / 导出入口。
+ * 平台预设用 beUI Combobox（分组 + 可搜索；beUI Select 无分组支持）。
  */
 
 import { Download, Keyboard, Link2, Redo2, Undo2 } from "lucide-react"
-import { toast } from "sonner"
 import { NumberInput } from "@/components/controls/number-input"
 import { TemplateDrawer } from "@/components/editor/template-drawer"
-import { ThemeToggle } from "@/components/theme/theme-toggle"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/motion/button"
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxLabel,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@/components/motion/combobox"
+import { ThemeToggle } from "@/components/theme/theme-toggle"
+import { toast } from "@/components/toast/toast"
 import type { PlatformGroup } from "@/lib/platforms"
 import { GROUP_LABELS, matchPresetId, PLATFORM_PRESETS } from "@/lib/platforms"
 import { useHistoryControls } from "@/lib/storage/history"
@@ -84,26 +87,41 @@ export function TopBar({ onOpenExport, onOpenShortcuts }: TopBarProps) {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
-      <span className="text-sm font-semibold tracking-tight">Cover Magic</span>
+      <span className="whitespace-nowrap text-sm font-semibold tracking-tight">
+        Cover Magic
+      </span>
 
-      <Select value={displayPresetId} onValueChange={selectPreset}>
-        <SelectTrigger className="h-8 w-52 text-xs" aria-label="平台预设">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="custom">自定义</SelectItem>
-          {(["cn", "os", "general"] as PlatformGroup[]).map((g) => (
-            <SelectGroup key={g}>
-              <SelectLabel>{GROUP_LABELS[g]}</SelectLabel>
-              {PLATFORM_PRESETS.filter((p) => p.group === g).map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* beUI Combobox 根元素自带 w-full，顶栏内必须显式收窄（否则挤压全行）。
+          Trigger 负责定位 ref（Content 依赖它测量），Input 内嵌其中提供搜索 */}
+      <Combobox
+        value={displayPresetId}
+        onValueChange={selectPreset}
+        className="w-52 shrink-0"
+      >
+        <ComboboxTrigger className="h-8 rounded-full px-2.5">
+          <ComboboxInput
+            aria-label="平台预设"
+            placeholder="选择平台…"
+            className="h-6 text-xs"
+          />
+        </ComboboxTrigger>
+        <ComboboxContent align="start">
+          <ComboboxList className="text-xs">
+            <ComboboxEmpty>没有匹配的平台</ComboboxEmpty>
+            <ComboboxItem value="custom">自定义</ComboboxItem>
+            {(["cn", "os", "general"] as PlatformGroup[]).map((g) => (
+              <ComboboxGroup key={g}>
+                <ComboboxLabel>{GROUP_LABELS[g]}</ComboboxLabel>
+                {PLATFORM_PRESETS.filter((p) => p.group === g).map((p) => (
+                  <ComboboxItem key={p.id} value={p.id} textValue={p.name}>
+                    {p.name}
+                  </ComboboxItem>
+                ))}
+              </ComboboxGroup>
+            ))}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
 
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <NumberInput
@@ -111,7 +129,8 @@ export function TopBar({ onOpenExport, onOpenShortcuts }: TopBarProps) {
           value={scene.exportSize.width}
           min={16}
           onCommit={(width) => setExportSize(width, scene.exportSize.height)}
-          className="h-8 w-20 text-xs"
+          className="w-20"
+          classNames={{ field: "h-8", input: "px-2.5 text-xs" }}
         />
         <span>×</span>
         <NumberInput
@@ -119,14 +138,15 @@ export function TopBar({ onOpenExport, onOpenShortcuts }: TopBarProps) {
           value={scene.exportSize.height}
           min={16}
           onCommit={(height) => setExportSize(scene.exportSize.width, height)}
-          className="h-8 w-20 text-xs"
+          className="w-20"
+          classNames={{ field: "h-8", input: "px-2.5 text-xs" }}
         />
         <span className="ml-1 hidden text-[10px] lg:inline">
           尺寸为社区经验值，可能过期
         </span>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
         <TemplateDrawer />
         <Button
           variant="ghost"
@@ -190,7 +210,11 @@ export function TopBar({ onOpenExport, onOpenShortcuts }: TopBarProps) {
         >
           <Keyboard className="size-4" />
         </Button>
-        <Button size="sm" className="h-8 gap-1.5" onClick={onOpenExport}>
+        <Button
+          size="sm"
+          className="h-8 shrink-0 gap-1.5 whitespace-nowrap"
+          onClick={onOpenExport}
+        >
           <Download className="size-3.5" />
           导出
         </Button>

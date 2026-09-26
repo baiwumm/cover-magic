@@ -59,6 +59,7 @@ export function SliderField({
         step={step}
         disabled={disabled}
         aria-label={label}
+        onValueChange={onChange}
         format={() => ""}
         formatValueText={(v) => `${v}${unit ?? ""}`}
         className="h-7"

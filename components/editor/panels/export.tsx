@@ -2,12 +2,11 @@
 
 import { ClipboardCopy, Download, Loader2 } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
 import { SelectField } from "@/components/controls/select-field"
 import { SliderField } from "@/components/controls/slider-field"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Item, ItemContent, ItemTitle } from "@/components/ui/item"
+import { Button } from "@/components/motion/button"
+import { Input } from "@/components/motion/input"
+import { toast } from "@/components/toast/toast"
 import {
   buildFileName,
   downloadBlob,
@@ -109,14 +108,10 @@ export function ExportPanel() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Item variant="muted" size="sm">
-        <ItemContent>
-          <ItemTitle className="text-xs">
-            目标尺寸：{scene.exportSize.width} × {scene.exportSize.height} px
-            {estimateText ? ` · 预估体积：${estimateText}` : ""}
-          </ItemTitle>
-        </ItemContent>
-      </Item>
+      <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-foreground">
+        目标尺寸：{scene.exportSize.width} × {scene.exportSize.height} px
+        {estimateText ? ` · 预估体积：${estimateText}` : ""}
+      </div>
 
       <SelectField
         label="格式"
@@ -144,8 +139,9 @@ export function ExportPanel() {
         <Input
           value={filename}
           placeholder={buildFileName(scene, format)}
-          onChange={(e) => setFilename(e.target.value)}
-          className="h-8 text-xs"
+          onChange={setFilename}
+          className="w-full"
+          classNames={{ field: "h-8", input: "px-3 text-xs" }}
         />
       </div>
       <div className="grid grid-cols-2 gap-2">

@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/motion/button"
 import { createDefaultSubtitle } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 import { TextStyleEditor } from "./text-style-editor"
@@ -13,7 +13,7 @@ export function SubtitlePanel() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8"
+        className="h-8 rounded-full"
         onClick={() =>
           setScene((draft) => {
             draft.subtitle = createDefaultSubtitle()
@@ -37,7 +37,7 @@ export function SubtitlePanel() {
       <Button
         variant="outline"
         size="sm"
-        className="h-8"
+        className="h-8 rounded-full"
         onClick={() =>
           setScene((draft) => {
             draft.subtitle = null

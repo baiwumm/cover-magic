@@ -6,7 +6,6 @@ import { ColorField } from "@/components/controls/color-field"
 import { SelectField } from "@/components/controls/select-field"
 import { SliderField } from "@/components/controls/slider-field"
 import { SwitchField } from "@/components/controls/switch-field"
-import { Separator } from "@/components/ui/separator"
 import type { Background } from "@/lib/scene"
 import { createDefaultBackground } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
@@ -131,7 +130,7 @@ export function BackgroundPanel() {
               })
             }
           />
-          <Separator />
+          <hr className="h-px border-0 bg-border" />
           <SwitchField
             label="遮罩"
             checked={bg.overlay > 0}

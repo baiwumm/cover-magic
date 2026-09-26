@@ -9,9 +9,8 @@ import { useEffect, useRef, useState } from "react"
 import { AssetDropzone } from "@/components/controls/asset-dropzone"
 import { ColorField } from "@/components/controls/color-field"
 import { SliderField } from "@/components/controls/slider-field"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/motion/button"
+import { Input } from "@/components/motion/input"
 import { CURATED_ICONS, searchIcons } from "@/lib/iconify"
 import { preloadImage } from "@/lib/render/icons"
 import { LOGO_SIZE_RANGE } from "@/lib/scene"
@@ -82,8 +81,9 @@ export function LogoPanel() {
         <Input
           value={query}
           placeholder="例如 rocket、图书、fire…"
-          onChange={(e) => setQuery(e.target.value)}
-          className="h-8 text-xs"
+          onChange={setQuery}
+          className="w-full"
+          classNames={{ field: "h-8", input: "px-3 text-xs" }}
         />
         {searching && (
           <span className="text-[11px] text-muted-foreground">搜索中…</span>
@@ -95,7 +95,7 @@ export function LogoPanel() {
         )}
       </div>
 
-      <ScrollArea className="h-56 rounded-md border border-border p-2">
+      <div className="h-56 overflow-y-auto rounded-xl border border-border p-2">
         <div className="grid grid-cols-6 gap-1.5">
           {results.map((code) => (
             <button
@@ -103,7 +103,7 @@ export function LogoPanel() {
               type="button"
               title={code}
               onClick={() => void applyIcon(code)}
-              className="flex aspect-square items-center justify-center rounded-md p-1 hover:bg-accent"
+              className="flex aspect-square items-center justify-center rounded-lg p-1 hover:bg-accent"
             >
               {/* biome-ignore lint/performance/noImgElement: 仅 UI 预览；canvas 绘制走 dataURL 缓存（R-5） */}
               <img
@@ -120,7 +120,7 @@ export function LogoPanel() {
             没有找到匹配的图标
           </p>
         )}
-      </ScrollArea>
+      </div>
       <p className="text-[11px] text-muted-foreground">
         默认展示精选集合，输入关键词搜索全库。
       </p>
@@ -188,7 +188,7 @@ export function LogoPanel() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8"
+            className="h-8 rounded-full"
             onClick={() =>
               setScene((draft) => {
                 draft.logo = null

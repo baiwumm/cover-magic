@@ -12,6 +12,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  ComboboxTrigger,
 } from "@/components/motion/combobox"
 import { FONTS } from "@/lib/fonts"
 
@@ -25,12 +26,14 @@ export function FontSelect({ value, onChange }: FontSelectProps) {
     <div className="flex flex-col gap-1.5">
       <span className="text-xs text-muted-foreground">字体</span>
       <Combobox value={value} onValueChange={onChange}>
-        <ComboboxInput
-          aria-label="字体"
-          placeholder="搜索字体…"
-          wrapperClassName="h-8 rounded-full border-border"
-          className="h-6 text-xs"
-        />
+        {/* Trigger 负责定位 ref（Content 依赖它测量），Input 内嵌其中提供搜索 */}
+        <ComboboxTrigger className="h-8 rounded-full px-2.5">
+          <ComboboxInput
+            aria-label="字体"
+            placeholder="搜索字体…"
+            className="h-6 text-xs"
+          />
+        </ComboboxTrigger>
         <ComboboxContent>
           <ComboboxList className="text-xs">
             <ComboboxEmpty>没有匹配的字体</ComboboxEmpty>
