@@ -58,7 +58,7 @@ pnpm build   # 纯静态导出 → out/
 | 层 | 选型 |
 |---|---|
 | 框架 | Next.js 16 App Router + React 19，`output: 'export'` |
-| 样式 | Tailwind CSS v4 + shadcn/ui（Radix）+ `next-themes` |
+| 样式 | Tailwind CSS v4 + beUI（beui.dev 动效组件库）+ `next-themes` |
 | 状态 | zustand + zundo（撤销重做）+ immer |
 | 渲染 | 原生 Canvas 2D（**不用** html2canvas / DOM 转图） |
 | 字体 | `@font-face` + 仓库内 Maple Mono CN woff2 子集（400/700） |
@@ -74,12 +74,13 @@ cover-magic/
 │   ├── page.tsx              # 落地页 /
 │   ├── editor/page.tsx       # 制作页 /editor
 │   ├── layout.tsx            # 主题 + 字体 preload
-│   └── globals.css           # Tailwind v4 + shadcn OKLCH + @font-face
+│   └── globals.css           # Tailwind v4 + 中性 OKLCH token + @font-face
 ├── components/
 │   ├── landing/              # Hero / 模板墙 / features / FAQ / footer
 │   ├── editor/               # 三栏外壳、画布、面板、模板抽屉
 │   ├── controls/             # UI 隔离层（取色、滑块、上传…）
-│   ├── ui/                   # shadcn 生成物
+│   ├── motion/               # beUI 生成物（动效组件）
+│   ├── toast/                # 命令式 toast 桥接
 │   └── theme/                # 主题切换（View Transition）
 ├── lib/
 │   ├── scene.ts              # Scene 类型 + 默认值唯一定义处

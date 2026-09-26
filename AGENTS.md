@@ -14,12 +14,13 @@
 |---|---|
 | 框架 | Next.js 16 App Router + React 19，`output: 'export'` 纯静态导出 |
 | 样式 | Tailwind CSS v4；深浅色用 `dark:` 变体 + `next-themes` |
-| UI | shadcn/ui（官方注册表，`npx shadcn@latest add`），底层 Radix UI |
+| UI | **beUI**（<https://beui.dev>，Motion 动效组件库，shadcn 注册表分发：`pnpm exec shadcn add @beui/<name>`，源码落在 `components/motion/*`）。**不再使用 shadcn/ui 组件**（Radix 全部移除），但 token 体系仍是 shadcn 中性 OKLCH 变量 |
 | 图标 | `lucide-react` 仅用于**界面外壳**；封面画面内容图标用 Iconify（见铁律 R-5） |
 | 状态 | `zustand` + `zundo`（撤销重做）+ `immer` |
-| 动效 | `motion`；落地页背景 `ogl` 光束 |
-| 取色 | `react-colorful` 包在 shadcn `Popover` 里，封装为 `components/controls/color-field.tsx`。**官方注册表无取色器，此为实测结论**（见 R-18） |
-| 上传 | `react-dropzone` + shadcn `Item`/`Field` 组合成 `controls/asset-dropzone.tsx`。**不要手写拖拽逻辑** |
+| 动效 | `motion`（同时也是 beUI 的底层）；落地页背景 `ogl` 光束 |
+| 取色 | `react-colorful` 包在 beUI `Popover` 里，封装为 `components/controls/color-field.tsx`。**任何注册表都无取色器，引专门库不手绘**（见 R-18） |
+| 上传 | `react-dropzone` 处理拖拽事件 + beUI 面板语言呈现，组合成 `controls/asset-dropzone.tsx`。**不要手写拖拽逻辑** |
+| Toast | 命令式桥接层 `components/toast/toast.ts`（sonner 调用形态）+ `components/toast/toaster.tsx`（beUI `AnimatedToastStack` 底座），挂在根布局。**不要直接引 sonner** |
 | 渲染 | 原生 Canvas 2D。**禁止**引入 html2canvas / dom-to-image 一类 DOM 转图片方案 |
 | 包管理 | pnpm |
 | 测试 | `vitest`，仅覆盖 `lib/` 下的纯函数（换行、比例、Scene 序列化）。不测像素 |
@@ -29,9 +30,10 @@
 
 ```
 app/{page.tsx,editor/page.tsx}     # 两个页面，均 'use client'
-components/{landing,editor,controls,ui}/*
-components/ui/*                    # shadcn 生成物，禁止手改；需要变体时改 controls/
-lib/{scene.ts,render/*,text/*,storage/*,iconify.ts,platforms.ts}
+components/{landing,editor,controls,motion,toast,theme}/*
+components/motion/*                # beUI 生成物，禁止手改；需要变体时改 controls/
+components/toast/*                 # 命令式 toast 桥接（自研薄层）
+lib/{scene.ts,render/*,text/*,storage/*,iconify.ts,platforms.ts,ease.ts,hooks/*}
 data/templates.ts                  # 模板纯数据
 public/fonts/*.woff2
 ```
@@ -63,12 +65,12 @@ public/fonts/*.woff2
 
 ## UI 约定
 
-- **R-18**：组件优先顺序：shadcn 官方注册表 → **引入现成的专门库** → Radix 原语组合 → 最后才手写。**不要用 Tailwind 手搓一个库里已有的组件**，也不要在已有专门库时手写该控件的替代品（取色器用 `react-colorful`、拖拽上传用 `react-dropzone`，都是这个原因）。加组件前先 `npx shadcn@latest add <name>` 之前先核对注册表是否已有。
-  - 官方注册表当前共 63 项，含：`button card tabs popover select slider switch dialog sheet drawer dropdown-menu tooltip accordion combobox command resizable scroll-area separator input textarea field form input-group item kbd sonner skeleton empty badge toggle-group aspect-ratio native-select table progress` 等 —— 我们需要的通用件**全部命中**。
-  - 官方注册表**没有**（已实测）：color picker、dropzone/文件上传。
-  - ⚠️ 别误装：注册表里的 `attachment` / `bubble` / `message` / `message-scroller` / `marker` 是**聊天 UI 组件**，不是文件选择器或图钉。
-  - ⚠️ 社区注册表已实测不可用：`shadcn.io/r/color-picker.json` 返回 401（需付费鉴权）、`originui.com/r/color-picker.json` 重定向到文档页、`base-ui.com/r/index.json` 返回 404。不要为省事引这些来源。
-- **R-19**：主题走 shadcn 默认中性（黑/白/灰 + OKLCH 变量），与视觉参考项目 ogimg 一致。不要引入彩色主色。变体用 `cva`。**例外**：落地页装饰色不受 R-19 约束 —— hero 标题渐变、ogl 光束、模板缩略图内容色可彩色；编辑器 UI 与控件仍保持中性。
+- **R-18**：组件优先顺序：**beUI 注册表（`@beui`）→ 引入现成的专门库 → 最后才手写**（仅限 beUI 没有的小型展示原语，如 kbd / separator / textarea，按 beUI 视觉语言轻量手写）。**不要用 Tailwind 手搓一个库里已有的组件**，也不要在已有专门库时手写该控件的替代品（取色器用 `react-colorful`、拖拽上传用 `react-dropzone`，都是这个原因）。
+  - 安装：`pnpm exec shadcn add @beui/<name>`（`components.json` 已注册 `@beui` → `https://beui.dev/r/{name}.json`）。装完跑 `pnpm lint:fix` 归一 import 顺序；beUI vendor 产物（`components/motion/**` 与 `lib/ease.ts`、`lib/hooks/*` 等）在 `biome.json` overrides 中豁免 lint/format，与原 `components/ui/**` 同策略。
+  - ⚠️ 实测坑（2026-09-27）：`/r/{slug}`（不带 `.json`）是目录页不是安装件，**必须用 `.json` 端点**；`button` / `text-animation` 是家族页，实际 slug 是 `button-base` / `button-magnetic` / `text-reveal` 等叶子件；`button-base` 不含 barrel `index.tsx`（缺失时自建 re-export）。
+  - ⚠️ beUI 组件的实测约定：`Combobox` 根元素自带 `w-full`（顶栏等横向 flex 容器内必须显式收窄 + `shrink-0`）；`ComboboxContent` 定位依赖 `ComboboxTrigger` 设置的 ref，**搜索框必须用 `<ComboboxTrigger><ComboboxInput/></ComboboxTrigger>` 组合**；`TabsList` 的标签翻色层按 X 轴计算覆盖，**网格多行布局会误判**（隐藏 `[data-tabs-label]` 并用 `aria-selected:` 上色替代）；`MorphingModal` 无内建 Esc 关闭与关闭按钮（消费方自补）。
+  - beUI 无对应件的取舍：`separator` / `scroll-area` / `kbd` / `textarea` / `label` 轻量手写；`resizable` 直接用 `react-resizable-panels`（v4 API：`Group` / `Panel` / `Separator`，百分比尺寸传字符串）。
+- **R-19**：主题 token 沿用 shadcn 中性 OKLCH 变量（黑/白/灰），beUI 组件消费同一套 `--background` / `--border` / `--muted-foreground` 等 token，另补了 `--border-strong` / `--success` 两个 beUI 依赖的 token。不要引入彩色主色。**例外**：落地页装饰色不受 R-19 约束 —— hero 标题渐变、ogl 光束、模板缩略图内容色可彩色；编辑器 UI 与控件仍保持中性。
 - **R-20**：操作便捷优先于参数完备。**不要用一维滑块调二维位置** —— 元素定位靠画布拖拽 + 方向键微调，不靠 XY 滑块对。已删除的控件（背景透明度、随机文件名及其字符集选项、加载动画）不要以新名义加回来。
 - **R-21**：平台预设（`lib/platforms.ts`）选中后**只填入推荐值，不锁死宽高输入**（v1 的 `disabled` 是过度限制，且这些尺寸均为社区经验值、可能过期）。预设按「中文社区 / 海外平台 / 通用」分组。
 - **R-22**：移动端：`/editor` 检测到窄视口或触屏时渲染「请在 PC 端使用」提示卡，不做响应式编辑器。落地页保持可浏览。

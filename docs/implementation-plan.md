@@ -2,7 +2,8 @@
 
 > **本文件是自包含的执行输入。** 在新窗口打开项目时，只需说「按 `docs/implementation-plan.md` 从 Phase N 开始执行」即可接手，不依赖任何历史对话。
 > 配套阅读顺序：`AGENTS.md`（约束，自动加载）→ 本文件（任务）→ `docs/requirements.md`（背景与证据）。
-> 状态：**Phase 0–8.5 已完成并提交**（Phase 6 于 2026-09-21 过质量门；Phase 7 审查修复 `3c53fad`；Phase 8 部署配置 `8767d75`），**全局 DoD 1–5 于 2026-09-22 真实浏览器验收全绿**（`.accept-dod.mjs`，CDP 视口 1440×900，PASS 23 / FAIL 0），**8.6 `2.0.0` release 待用户明确指令**。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
+> 状态：**Phase 0–8.5 已完成并提交**（Phase 6 于 2026-09-21 过质量门；Phase 7 审查修复 `3c53fad`；Phase 8 部署配置 `8767d75`），**全局 DoD 1–5 于 2026-09-22 真实浏览器验收全绿**（`.accept-dod.mjs`，CDP 视口 1440×900，PASS 23 / FAIL 0），**8.6 `2.0.0` release 待用户明确指令**。**Phase 9（2026-09-27）：UI 库全量迁移至 beUI 已完成并提交**（`f0b8015` 起 6 个 commit，质量门全绿 + 真实浏览器交互路径验收，见 §4.9）。每阶段结束必须过 `AGENTS.md` 的质量门（§质量门）后提交一个 commit。
+
 
 ---
 
@@ -55,6 +56,7 @@
 | D-34 | **全站 UI 字体 = Maple Mono CN**（2026-09-21 用户追加）：`app/globals.css` 的 `:root { --font-sans-stack / --font-mono-stack }` + `@theme inline { --font-sans / --font-mono }`，`body` 挂 `font-sans`。与封面渲染同族，落地页 / 编辑器 / 封面三处观感统一 |
 | D-35 | **字体 preload 上移到根布局**（D-34 的直接后果）：全站 UI 都要用它，且落地页本来就会为模板缩略图下载这两个 woff2，preload 只是提前发起、不增加字节。AGENTS.md R-15 已同步修订（2026-09-22，P1-17） |
 | D-36 | **落地页光束改整页固定背景 + 主题切换接 `theme-switch-animation`**（2026-09-21 用户追加，参考 `E:\personal-project\theme-switch-animation\apps\docs`）：`LightRays` 挂在 `app/page.tsx` 作 `fixed inset-0 -z-10`（根容器 `relative isolate`）；新增 `components/theme/theme-toggle.tsx`，以**受控模式**（`isDark` + `onChange`）接 next-themes——class 与 localStorage 仍归 next-themes，库只管 View Transition 动画。navbar 与编辑器顶栏共用该按钮 |
+| D-37 | ✅ **UI 库全量从 shadcn/ui 迁移到 beUI，已完成（2026-09-27 用户决策）**：`components.json` 注册 `@beui`（`https://beui.dev/r/{name}.json`），源码落 `components/motion/*`；theme-toggle 改用 beUI `ThemeToggle`（VTA circle 揭示，`theme-switch-animation` 包移除）；toast 换 `components/toast` 桥接（beUI `AnimatedToastStack` 底座）；`components/ui` 整目录删除，`radix-ui` / `@base-ui/react` / `cmdk` / `vaul` / `sonner` / `tw-animate-css` / `class-variance-authority` / `cn` 依赖移除。**beUI 消费同一套 shadcn 中性 OKLCH token**（补 `--border-strong` / `--success`），R-19 不破坏；渲染管线（R-1～R-11）零改动。实测坑位（`.json` 端点才可安装、Combobox 根元素 w-full 与 Trigger/Input 组合、TabsList 网格翻色误判、MorphingModal 无 Esc）记录在 AGENTS.md R-18 |
 
 ---
 
@@ -93,7 +95,8 @@ cover-magic/
 │   ├── editor/page.tsx              # 'use client' 制作页
 │   └── not-found.tsx
 ├── components/
-│   ├── ui/                          # shadcn CLI 生成，禁止手改
+│   ├── motion/                      # beUI CLI 生成（D-37），禁止手改
+│   ├── toast/                       # 命令式 toast 桥接（AnimatedToastStack 底座）
 │   ├── landing/                     # navbar / hero / template-gallery / features / steps / faq / footer
 │   ├── editor/
 │   │   ├── editor-shell.tsx         # 三栏骨架
@@ -471,7 +474,27 @@ export function drawScene(
 
 ---
 
-## 附录 A · shadcn 组件安装清单（Phase 2.4 前置，一条命令装齐）
+### 4.9 Phase 9 · UI 库全量迁移至 beUI（D-37，2026-09-27 已完成）
+
+**目标**：全站 UI 组件从 shadcn/ui（Radix 底座）切换为 beUI（beui.dev 动效组件库），整体风格与首页排版统一采用 beUI 视觉语言；渲染管线零改动。
+
+**任务清单**（全部完成）：
+
+- [x] 9.1 基建：components.json 注册 `@beui` 命名空间，shadcn CLI 安装 21 项 beUI 组件（f0b8015）；biome.json 将 beUI vendor 产物纳入豁免
+- [x] 9.2 控件层：controls/* 八个控件换 beUI 底座（FluidSlider / Select / Switch / Popover / Combobox / Input），components/toast 桥接层落地
+- [x] 9.3 编辑器外壳：beUI Tabs / MorphingModal / Drawer / AnimatedToastStack / Combobox（平台预设，分组可搜索）；resizable 直连 react-resizable-panels v4
+- [x] 9.4 落地页：LinkButton（ButtonLink 弹簧按压 + SPA 导航）、TiltCard（特性卡与模板卡）、BouncyAccordion（FAQ）、beUI 卡面语言重排
+- [x] 9.5 清理：删除 components/ui 整目录，移除 radix-ui / cmdk / vaul / sonner / theme-switch-animation / tw-animate-css / @base-ui/react / class-variance-authority / cn 九项依赖
+- [x] 9.6 验收：质量门全绿；真实浏览器跑通编辑器交互路径（tab 切换 / 滑杆拖拽 / 组合框搜索与分组选中等 / 取色器 / 模板抽屉套用 + toast / 快捷键面板 / 深浅色切换 / 导出预估）与落地页走查（hero / tilt 卡 / FAQ 手风琴 / CTA）
+
+**迁移中修复的缺陷**：SliderField 漏传 FluidSlider onValueChange（滑杆拖动不回调，浏览器验收时发现）；导出文件名 placeholder 时间戳导致 hydration 属性不匹配（既有问题，加 suppressHydrationWarning）。
+
+**留下的边界**：beUI 组件的约束沉淀为 AGENTS.md R-18；beUI 弹层无 focus trap（Radix 有），当前可接受；Firefox 139 以下主题切换无 VTA 动画（静默降级直切）。
+
+---
+
+
+## 附录 A · shadcn 组件安装清单（⚠️ 已被 D-37 beUI 迁移取代，仅存档）
 
 ```bash
 npx shadcn@latest add button card tabs popover select native-select slider switch \

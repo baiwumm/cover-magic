@@ -365,6 +365,7 @@ type Scene = {
 | 追加 | 字体 | `@font-face` + woff2 子集入仓（照搬 better-admin 模式），**需提供 400 + 700 双字重** |
 | 追加 | 移动端 | 不做编辑器响应式，`/editor` 给「请在 PC 端使用」提示 |
 | 追加 | 语言 / 版本 | 纯中文；从 `2.0.0` 起，保留 release-it 流程 |
+| C-01 修订<br>（2026-09-27） | UI 库范围 | **全站 shadcn/ui → beUI**（<https://beui.dev>）。用户决策：整体风格与首页排版统一采用 beUI 的动效视觉。可行性要点：beUI 是 shadcn 注册表分发（`@beui` 命名空间）+ 拷源码模式，只依赖 `motion`/`clsx`/`tailwind-merge`/`lucide-react`/`next-themes`（项目全部已有），**消费同一套 shadcn 中性 OKLCH token**（R-19 不破坏）；渲染管线（R-1～R-11）零改动。shadcn/Radix 组件与 `radix-ui` / `cmdk` / `vaul` / `sonner` / `@base-ui/react` 等依赖全部移除；toast 换成 `components/toast` 桥接层（beUI `AnimatedToastStack` 底座）。实测细节与坑位记录在 `AGENTS.md` R-18 |
 
 > 完整决策编号 D-01…D-36、平台预设终值表、分阶段任务与验收标准见 `docs/implementation-plan.md`；工程约束见 `AGENTS.md`。
 >
