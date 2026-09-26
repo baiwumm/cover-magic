@@ -7,12 +7,12 @@
  */
 
 import { useEffect } from "react"
-import { toast } from "sonner"
 import { EditorShell } from "@/components/editor/editor-shell"
 import {
   MobileGate,
   shouldShowMobileGate,
 } from "@/components/editor/mobile-gate"
+import { toast } from "@/components/toast/toast"
 import { getTemplate } from "@/data/templates"
 import { ensureFontLoaded } from "@/lib/fonts"
 import { drawScene } from "@/lib/render/draw-scene"

@@ -4,7 +4,7 @@
  * hydrated 门闩：启动恢复完成前禁止排保存，避免默认场景覆盖本地存档。
  */
 
-import { toast } from "sonner"
+import { toast } from "@/components/toast/toast"
 import { getDefaultTemplate } from "@/data/templates"
 import { createDefaultScene, type Scene } from "@/lib/scene"
 

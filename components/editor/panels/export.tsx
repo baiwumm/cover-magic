@@ -138,6 +138,8 @@ export function ExportPanel() {
         </span>
         <Input
           value={filename}
+          // buildFileName 含时间戳，SSR 与水合各生成一次必然不同 → 抑制属性告警
+          suppressHydrationWarning
           placeholder={buildFileName(scene, format)}
           onChange={setFilename}
           className="w-full"

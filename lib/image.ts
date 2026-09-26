@@ -3,7 +3,7 @@
  * 避免大图撑爆 localStorage（上限 5MB 场景）。
  */
 
-import { toast } from "sonner"
+import { toast } from "@/components/toast/toast"
 
 const MAX_SIDE = 1920
 const WEBP_QUALITY = 0.82
