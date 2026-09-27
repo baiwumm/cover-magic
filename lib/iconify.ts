@@ -10,7 +10,7 @@ const API = "https://api.iconify.design"
 export const CURATED_ICONS = [
   "fluent-emoji-flat:fire",
   "fluent-emoji-flat:rocket",
-  "fluent-emoji-flat:bulb",
+  "fluent-emoji-flat:light-bulb",
   "fluent-emoji-flat:books",
   "fluent-emoji-flat:gear",
   "fluent-emoji-flat:laptop",
@@ -19,7 +19,7 @@ export const CURATED_ICONS = [
   "noto:open-book",
   "noto:gear",
   "twemoji:rocket",
-  "twemoji:bulb",
+  "twemoji:light-bulb",
   "twemoji:books",
   "twemoji:gear",
   "openmoji:rocket",
@@ -27,10 +27,10 @@ export const CURATED_ICONS = [
   "openmoji:books",
   "openmoji:gear",
   "fluent-emoji-flat:trophy",
-  "fluent-emoji-flat:computer",
+  "fluent-emoji-flat:desktop-computer",
   "noto:desktop-computer",
   "twemoji:laptop",
-  "openmoji:computer",
+  "openmoji:desktop-computer",
   "fluent-emoji-flat:memo",
 ]
 
