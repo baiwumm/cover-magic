@@ -25,8 +25,9 @@ function GalleryThumb({ template }: { template: Template }) {
       .then(() => {
         if (!cancelled) setDataUrl(getCachedThumbnail(template.id) ?? null)
       })
-      .catch(() => {
-        // 失败保持占位，不抛到 React
+      .catch((err) => {
+        // 失败保持占位，但不静默——留排查线索
+        console.error(`模板缩略图生成失败：${template.id}`, err)
       })
     return () => {
       cancelled = true
@@ -34,19 +35,15 @@ function GalleryThumb({ template }: { template: Template }) {
   }, [template, dataUrl])
 
   return (
-    <div
-      className="flex items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40"
-      style={{
-        aspectRatio: `${template.scene.ratio.w} / ${template.scene.ratio.h}`,
-      }}
-    >
+    <div className="flex h-44 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:h-48">
       {dataUrl ? (
         // biome-ignore lint/performance/noImgElement: R-14 原生 img
         <img
           src={dataUrl}
           alt={template.name}
           loading="lazy"
-          className="size-full object-cover"
+          // 等高 letterbox：卡片统一高度，图片按各自比例完整显示（四列对称）
+          className="max-h-full w-auto max-w-full object-contain"
         />
       ) : (
         <Loader

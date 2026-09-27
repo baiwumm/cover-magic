@@ -1,15 +1,13 @@
 "use client"
 
 /**
- * 滑块控件：beUI FluidSlider 轨道 + 数值显示 + 单位。仅用于一维标量（字号/
- * 透明度/模糊等），元素定位禁止使用 XY 滑块（R-20，靠画布拖拽）。
- * 数值框走 NumberInput（draft + blur/Enter 提交，P1-11）；
- * 轨道内嵌的值文本留空（format 返回空串），避免与 NumberInput 重复显示，
- * 读屏文案仍由 formatValueText 提供带单位读数。
+ * 滑块控件：beUI RangeSlider（竖条拇指 + 弹簧吸附）+ 数值显示 + 单位。
+ * 仅用于一维标量（字号/透明度/模糊等），元素定位禁止使用 XY 滑块
+ * （R-20，靠画布拖拽）。数值框走 NumberInput（draft + blur/Enter 提交，P1-11）。
  */
 
 import { NumberInput } from "@/components/controls/number-input"
-import { FluidSlider } from "@/components/motion/range-slider-fluid"
+import { RangeSlider } from "@/components/motion/range-slider"
 
 interface SliderFieldProps {
   label: string
@@ -33,7 +31,7 @@ export function SliderField({
   disabled,
 }: SliderFieldProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">{label}</span>
         <div className="flex items-center gap-1">
@@ -52,7 +50,7 @@ export function SliderField({
           )}
         </div>
       </div>
-      <FluidSlider
+      <RangeSlider
         value={value}
         min={min}
         max={max}
@@ -60,9 +58,9 @@ export function SliderField({
         disabled={disabled}
         aria-label={label}
         onValueChange={onChange}
-        format={() => ""}
+        showTicks={false}
         formatValueText={(v) => `${v}${unit ?? ""}`}
-        className="h-7"
+        className="h-8"
       />
     </div>
   )

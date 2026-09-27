@@ -37,19 +37,23 @@ export async function renderThumbnail(
   return dataUrl
 }
 
-/** 批量预热（幂等，并发安全） */
+/** 批量预热（幂等，并发安全）。
+ *  注意：同 id 已有在途任务时必须「等待」而不是跳过——跳过会让调用方在
+ *  缓存尚未填充时提前拿到空结果且不再重查（StrictMode 双调用/重复挂载下
+ *  表现为缩略图永久转圈）。 */
 export async function ensureThumbnails(
   items: Array<{ id: string; scene: Scene }>,
 ): Promise<void> {
   await Promise.all(
-    items
-      .filter((t) => !cache.has(t.id) && !pending.has(t.id))
-      .map((t) => {
-        const task = renderThumbnail(t.id, t.scene).finally(() =>
-          pending.delete(t.id),
-        )
-        pending.set(t.id, task)
-        return task
-      }),
+    items.map((t) => {
+      if (cache.has(t.id)) return Promise.resolve()
+      const inflight = pending.get(t.id)
+      if (inflight) return inflight.then(() => undefined)
+      const task = renderThumbnail(t.id, t.scene).finally(() =>
+        pending.delete(t.id),
+      )
+      pending.set(t.id, task)
+      return task
+    }),
   )
 }

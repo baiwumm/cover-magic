@@ -87,9 +87,26 @@ export function TopBar({ onOpenExport, onOpenShortcuts }: TopBarProps) {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
-      <span className="whitespace-nowrap text-sm font-semibold tracking-tight">
+      {/* 品牌 = 回首页入口（logo 明暗双图 CSS 切换） */}
+      <a
+        href="/"
+        aria-label="回到首页"
+        className="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-semibold tracking-tight transition-opacity hover:opacity-70"
+      >
+        {/* biome-ignore lint/performance/noImgElement: R-14 原生 img；装饰性 logo（alt=""）明暗双图靠 CSS 切换 */}
+        <img
+          src="/logo-light.svg"
+          alt=""
+          className="size-6 rounded-md dark:hidden"
+        />
+        {/* biome-ignore lint/performance/noImgElement: R-14 原生 img；装饰性 logo（alt=""）明暗双图靠 CSS 切换 */}
+        <img
+          src="/logo-dark.svg"
+          alt=""
+          className="hidden size-6 rounded-md dark:block"
+        />
         Cover Magic
-      </span>
+      </a>
 
       {/* beUI Combobox 根元素自带 w-full，顶栏内必须显式收窄（否则挤压全行）。
           Trigger 负责定位 ref（Content 依赖它测量），Input 内嵌其中提供搜索 */}
