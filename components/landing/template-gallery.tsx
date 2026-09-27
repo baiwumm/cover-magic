@@ -7,6 +7,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { AnimatedBadge } from "@/components/motion/animated-badge"
 import { Loader } from "@/components/motion/loader"
 import { TiltCard } from "@/components/motion/tilt-card"
 import { type BestRatio, TEMPLATES, type Template } from "@/data/templates"
@@ -75,9 +76,9 @@ export function TemplateGallery() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-20">
       <div className="mb-10 flex flex-col items-center gap-3 text-center">
-        <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+        <AnimatedBadge status="neutral" size="md" showIcon={false}>
           模板
-        </span>
+        </AnimatedBadge>
         <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
           精选模板，一键套用
         </h2>
