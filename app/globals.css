@@ -136,6 +136,60 @@
 }
 
 /* ============================================================
+   自绘滚动条（对齐 theme-switch-animation docs 站的 custom_scrollbar）。
+   原生滚动条由浏览器 UI 层绘制，不在 View Transitions 快照内，主题切换时
+   会瞬间变色、跑在圆形扩散蒙版前面；自绘后属于页面渲染，跟随转场动画。
+   这里用全局选择器而非工具类：编辑器是 h-screen 面板布局，滚动条出现在
+   左栏 / 画布 / 抽屉 / 图标网格等多个容器上，逐个挂类会漏。
+   放进 @layer base 是为了让 beUI combobox 的 [&::-webkit-scrollbar]:hidden
+   仍能盖过这里（utilities 层优先于 base 层）。
+   10px 轨道内用「透明描边 + content-box 裁切」各留 2px 呼吸，实际滑块 6px 圆角。
+   颜色跟随 --muted-foreground，亮/暗两态自动适配；hover 加深一档。
+   ============================================================ */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    /* 两行 background-color 是刻意兜底：旧引擎不吃 color-mix 时回落到上一行 */
+    background-color: oklch(0.556 0 0 / 0.4);
+    background-color: color-mix(
+      in oklab,
+      var(--muted-foreground) 40%,
+      transparent
+    );
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: oklch(0.556 0 0 / 0.7);
+    background-color: color-mix(
+      in oklab,
+      var(--muted-foreground) 70%,
+      transparent
+    );
+  }
+}
+
+/* Chrome 121+ 一旦设了非 auto 的 scrollbar-color，就会忽略上面整套 ::-webkit-scrollbar 自绘；
+   所以标准属性只给不支持 webkit 伪元素的引擎（Firefox）用。 */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted-foreground) transparent;
+  }
+}
+
+/* ============================================================
    自托管字体（R-15）：@font-face + public/fonts/*.woff2 子集
    族名 'Maple Mono CN'，400/700 两字重（R-7 真字重的前提）。
    全站 UI 与封面渲染共用，两个页面都在 app/layout.tsx 里 preload。
