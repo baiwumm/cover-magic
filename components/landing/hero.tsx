@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowRight, Github, Sparkles } from "lucide-react"
+import { ArrowRight, Sparkles } from "lucide-react"
+import { GithubMark } from "@/components/landing/github-mark"
 import { LinkButton } from "@/components/landing/link-button"
 import { siteConfig } from "@/constants/site"
 import { TextGenerateEffect } from "./text-generate-effect"
@@ -53,7 +54,7 @@ export function Hero() {
             variant="outline"
             className="gap-2 rounded-full px-6"
           >
-            <Github className="size-4" />
+            <GithubMark className="size-4" />
             GitHub
           </LinkButton>
         </div>

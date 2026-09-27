@@ -1,4 +1,5 @@
-import { Github, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
+import { GithubMark } from "@/components/landing/github-mark"
 import { siteConfig } from "@/constants/site"
 
 /**
@@ -41,7 +42,7 @@ export function Footer() {
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Github className="size-3.5" />
+                  <GithubMark className="size-3.5" />
                   GitHub 仓库
                 </a>
               </li>

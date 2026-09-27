@@ -1,6 +1,6 @@
 "use client"
 
-import { Github } from "lucide-react"
+import { GithubMark } from "@/components/landing/github-mark"
 import { ButtonLink } from "@/components/motion/button"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { siteConfig } from "@/constants/site"
@@ -40,7 +40,7 @@ export function Navbar() {
             size="icon"
             aria-label="GitHub 仓库"
           >
-            <Github className="size-[18px]" />
+            <GithubMark className="size-[18px]" />
           </ButtonLink>
           <ThemeToggle />
         </div>
