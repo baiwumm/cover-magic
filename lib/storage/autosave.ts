@@ -14,6 +14,8 @@ const DEBOUNCE_MS = 400
 /** true = 启动恢复已完成，允许 autosave 写盘 */
 let hydrated = false
 let timer: ReturnType<typeof setTimeout> | null = null
+/** 等待落盘的最新场景（flush 时同步写，P2-6） */
+let pendingScene: Scene | null = null
 /** 配额超限只 toast 一次，避免每次 debounce 都弹（P1-25） */
 let quotaWarned = false
 
@@ -171,29 +173,43 @@ export function fallbackScene(): Scene {
 
 export function saveSceneDebounced(scene: Scene): void {
   if (!hydrated) return
+  pendingScene = scene
   if (timer) clearTimeout(timer)
   timer = setTimeout(() => {
     timer = null
-    try {
-      localStorage.setItem(KEY, JSON.stringify(scene))
-    } catch {
-      // localStorage 满（R-16 上限）或被禁用：一次性提示，不阻塞编辑（P1-25）
-      if (!quotaWarned) {
-        quotaWarned = true
-        toast.error("本地存储空间不足", {
-          description:
-            "当前修改未能保存，刷新后可能丢失。可删除部分上传图片或换用更小的图片。",
-        })
-      }
-    }
+    writePending()
   }, DEBOUNCE_MS)
 }
 
-/** 取消未落盘的 debounce（组件卸载时调用，避免模块级 timer 泄漏） */
-export function cancelPendingSave(): void {
+/**
+ * 立即落盘未完成的 debounce（P2-6）：pagehide / visibilitychange=hidden /
+ * 离开编辑器时调用，避免「改完 400ms 内关页」丢最后一笔修改。
+ */
+export function flushPendingSave(): void {
   if (timer) {
     clearTimeout(timer)
     timer = null
+  }
+  writePending()
+}
+
+function writePending(): void {
+  const scene = pendingScene
+  pendingScene = null
+  if (!hydrated || !scene) return
+  try {
+    localStorage.setItem(KEY, JSON.stringify(scene))
+    // 写盘成功后复位一次性提示位，后续再超限仍能提示（P2-6）
+    quotaWarned = false
+  } catch {
+    // localStorage 满（R-16 上限）或被禁用：一次性提示，不阻塞编辑（P1-25）
+    if (!quotaWarned) {
+      quotaWarned = true
+      toast.error("本地存储空间不足", {
+        description:
+          "当前修改未能保存，刷新后可能丢失。可删除部分上传图片或换用更小的图片。",
+      })
+    }
   }
 }
 
@@ -203,4 +219,16 @@ export function clearStoredScene(): void {
   } catch {
     // 忽略
   }
+}
+
+/**
+ * 关页/切后台时同步落盘（P2-6）：400ms debounce 窗口内关页、
+ * 切走标签页（移动端常直接杀进程）都会丢最后一笔修改。
+ */
+if (typeof window !== "undefined" && typeof document !== "undefined") {
+  window.addEventListener("pagehide", flushPendingSave)
+  window.addEventListener("beforeunload", flushPendingSave)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushPendingSave()
+  })
 }

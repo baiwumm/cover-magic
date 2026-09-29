@@ -20,8 +20,8 @@ import { computeSceneRects, hitTest } from "@/lib/render/element-rects"
 import { preloadSceneAssets } from "@/lib/render/icons"
 import { alignExportSize, createDefaultScene, type Scene } from "@/lib/scene"
 import {
-  cancelPendingSave,
   fallbackScene,
+  flushPendingSave,
   loadStoredScene,
   markHydrated,
   saveSceneDebounced,
@@ -121,7 +121,8 @@ export default function EditorPage() {
     })
     return () => {
       unsub()
-      cancelPendingSave()
+      // 离开编辑器时同步落盘，不能丢最后一笔（P2-6）
+      flushPendingSave()
     }
   }, [])
 
