@@ -6,7 +6,7 @@
  * P0-2：恢复完成后 markHydrated + 清撤销栈，避免误撤销覆盖存档。
  */
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { EditorShell } from "@/components/editor/editor-shell"
 import {
   MobileGate,
@@ -44,6 +44,16 @@ if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
 }
 
 export default function EditorPage() {
+  /**
+   * D-22 / R-22 移动端门：必须是客户端状态，不能在 render 期直接读 window。
+   * 本页静态导出时服务端也会渲染：服务端出编辑器、客户端出门卡 → 水合不匹配，
+   * 375×667 实测两棵 DOM 树叠加（编辑器残骸 + 门卡）。首帧允许短暂显示编辑器。
+   */
+  const [gated, setGated] = useState(false)
+  useEffect(() => {
+    setGated(shouldShowMobileGate())
+  }, [])
+
   // R-6：预热全部字重，首次绘制即拿到真字重
   useEffect(() => {
     void ensureFontLoaded("Maple Mono CN", 400)
@@ -115,8 +125,8 @@ export default function EditorPage() {
     }
   }, [])
 
-  // D-22：触屏/窄视口只出提示卡，不挂编辑器三栏
-  if (shouldShowMobileGate()) {
+  // D-22：触屏/窄视口只出提示卡，不挂编辑器三栏（门闩状态由 useEffect 置位）
+  if (gated) {
     return <MobileGate />
   }
 
