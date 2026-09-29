@@ -50,8 +50,8 @@ export const PLATFORM_PRESETS: PlatformPreset[] = [
   },
   { id: "toutiao", name: "今日头条", group: "cn", width: 1280, height: 720 },
   { id: "jianshu", name: "简书", group: "cn", width: 1080, height: 1080 },
-  { id: "xhs", name: "小红书", group: "os", width: 1242, height: 1660 },
-  { id: "bilibili", name: "B站", group: "os", width: 1440, height: 900 },
+  { id: "xhs", name: "小红书", group: "cn", width: 1242, height: 1660 },
+  { id: "bilibili", name: "B站", group: "cn", width: 1440, height: 900 },
   { id: "twitter", name: "X / Twitter", group: "os", width: 1200, height: 675 },
   { id: "youtube", name: "YouTube", group: "os", width: 1280, height: 720 },
   {
