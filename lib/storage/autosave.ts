@@ -38,79 +38,127 @@ export function loadStoredScene(): Scene | null {
   }
 }
 
+/** 导出边长上限（px）：畸形 hash/存档不得造出天文尺寸画布（防 OOM） */
+const MAX_EXPORT_EDGE = 8000
+/** ratio 边长上限：同上，比例本身无量纲但需防 NaN/Infinity/巨值 */
+const MAX_RATIO_EDGE = 10000
+
+function isFiniteNumber(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v)
+}
+
+/** 合法尺寸：有限数且 > 0（NaN/Infinity 一律不通过） */
+function isDim(v: unknown): v is number {
+  return isFiniteNumber(v) && v > 0
+}
+
 export function isLegalScene(s: unknown): s is Scene {
   if (typeof s !== "object" || s === null) return false
   const scene = s as Record<string, unknown>
   if (scene.version !== 2) return false
-  if (typeof scene.presetId !== "string") return false
+  if (scene.templateId !== null && typeof scene.templateId !== "string")
+    return false
+  if (typeof scene.presetId !== "string" || scene.presetId === "") return false
 
   const ratio = scene.ratio as { w?: unknown; h?: unknown } | null
   if (typeof ratio !== "object" || ratio === null) return false
   if (
-    typeof ratio.w !== "number" ||
-    typeof ratio.h !== "number" ||
-    ratio.w <= 0 ||
-    ratio.h <= 0
+    !isDim(ratio.w) ||
+    !isDim(ratio.h) ||
+    ratio.w > MAX_RATIO_EDGE ||
+    ratio.h > MAX_RATIO_EDGE
   )
     return false
 
   const es = scene.exportSize as { width?: unknown; height?: unknown } | null
   if (typeof es !== "object" || es === null) return false
-  if (
-    typeof es.width !== "number" ||
-    typeof es.height !== "number" ||
-    es.width <= 0 ||
-    es.height <= 0
-  )
-    return false
+  if (!isDim(es.width) || !isDim(es.height)) return false
+  if (es.width > MAX_EXPORT_EDGE || es.height > MAX_EXPORT_EDGE) return false
 
   const bg = scene.background as Record<string, unknown> | null
   if (typeof bg !== "object" || bg === null) return false
   const kind = bg.kind
   if (kind === "color") {
-    if (typeof bg.color !== "string") return false
+    if (typeof bg.color !== "string" || bg.color === "") return false
   } else if (kind === "gradient") {
     if (
       typeof bg.from !== "string" ||
+      bg.from === "" ||
       typeof bg.to !== "string" ||
-      typeof bg.angle !== "number"
+      bg.to === "" ||
+      !isFiniteNumber(bg.angle)
     )
       return false
   } else if (kind === "image") {
     if (
       typeof bg.dataUrl !== "string" ||
       (bg.fit !== "cover" && bg.fit !== "contain") ||
-      typeof bg.blur !== "number" ||
-      typeof bg.overlay !== "number" ||
-      typeof bg.overlayColor !== "string"
+      !isFiniteNumber(bg.blur) ||
+      bg.blur < 0 ||
+      !isFiniteNumber(bg.overlay) ||
+      bg.overlay < 0 ||
+      typeof bg.overlayColor !== "string" ||
+      bg.overlayColor === ""
     )
       return false
   } else {
     return false
   }
 
+  if (!("logo" in scene)) return false
   if (scene.logo !== null) {
     const logo = scene.logo as Record<string, unknown> | null
     if (typeof logo !== "object" || logo === null) return false
     const src = logo.source as Record<string, unknown> | null
     if (typeof src !== "object" || src === null) return false
-    if (src.kind !== "iconify" && src.kind !== "upload") return false
-    if (typeof logo.size !== "number" || logo.size <= 0) return false
+    if (src.kind === "iconify") {
+      if (typeof src.code !== "string" || src.code === "") return false
+    } else if (src.kind === "upload") {
+      if (typeof src.dataUrl !== "string" || src.dataUrl === "") return false
+    } else {
+      return false
+    }
+    if (!isFiniteNumber(logo.size) || logo.size <= 0) return false
+    if (!isFiniteNumber(logo.x) || !isFiniteNumber(logo.y)) return false
+    if (logo.color !== undefined && typeof logo.color !== "string") return false
+    if (logo.shadow !== undefined) {
+      const sh = logo.shadow as { size?: unknown; color?: unknown } | null
+      if (typeof sh !== "object" || sh === null) return false
+      if (!isFiniteNumber(sh.size) || sh.size < 0) return false
+      if (typeof sh.color !== "string") return false
+    }
   }
 
   for (const key of ["title", "subtitle", "watermark"] as const) {
+    if (!(key in scene)) return false
     const block = scene[key]
-    if (block === null || block === undefined) continue
-    if (typeof block !== "object") return false
+    if (block === null) continue
+    if (typeof block !== "object" || block === null) return false
     const b = block as Record<string, unknown>
+    if (typeof b.text !== "string") return false
+    if (!isFiniteNumber(b.x) || !isFiniteNumber(b.y)) return false
+    if (!isFiniteNumber(b.size) || b.size <= 0) return false
+    if (typeof b.color !== "string" || b.color === "") return false
+    if (typeof b.fontFamily !== "string" || b.fontFamily === "") return false
+    if (b.fontWeight !== 400 && b.fontWeight !== 700) return false
+    if (typeof b.italic !== "boolean") return false
+    if (typeof b.autoFit !== "boolean") return false
+    if (typeof b.uppercase !== "boolean") return false
     if (
-      typeof b.text !== "string" ||
-      typeof b.x !== "number" ||
-      typeof b.y !== "number" ||
-      typeof b.size !== "number" ||
-      typeof b.color !== "string"
+      !isFiniteNumber(b.maxWidthPct) ||
+      b.maxWidthPct <= 0 ||
+      b.maxWidthPct > 100
     )
       return false
+    if (!isFiniteNumber(b.letterSpacing)) return false
+    if (!isFiniteNumber(b.lineHeight) || b.lineHeight <= 0) return false
+    if (b.align !== "left" && b.align !== "center" && b.align !== "right")
+      return false
+    if (!isFiniteNumber(b.shadow) || b.shadow < 0) return false
+    if (key === "watermark") {
+      if (!isFiniteNumber(b.opacity) || b.opacity < 0 || b.opacity > 1)
+        return false
+    }
   }
 
   return true
