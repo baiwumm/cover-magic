@@ -13,7 +13,7 @@ import { Button } from "@/components/motion/button"
 import { Input } from "@/components/motion/input"
 import { CURATED_ICONS, searchIcons } from "@/lib/iconify"
 import { preloadImage } from "@/lib/render/icons"
-import { LOGO_SIZE_RANGE } from "@/lib/scene"
+import { createDefaultLogo, LOGO_SIZE_RANGE } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -64,10 +64,10 @@ export function LogoPanel() {
 
   const applyIcon = async (code: string) => {
     setScene((draft) => {
-      // 换图标保留已调好的尺寸/位置（P2）
+      // 换图标保留已调好的尺寸/位置/颜色（P2）
       draft.logo = draft.logo
         ? { ...draft.logo, source: { kind: "iconify", code } }
-        : { source: { kind: "iconify", code }, size: 200, x: 50, y: 22 }
+        : createDefaultLogo({ kind: "iconify", code })
     })
     await preloadImage({ kind: "iconify", code })
   }
@@ -80,7 +80,7 @@ export function LogoPanel() {
         </span>
         <Input
           value={query}
-          placeholder="例如 rocket、图书、fire…"
+          placeholder="例如 rocket、book、fire…"
           onChange={setQuery}
           className="w-full"
           classNames={{ field: "h-8", input: "px-3 text-xs" }}
@@ -117,12 +117,12 @@ export function LogoPanel() {
         </div>
         {!results.length && !searching && !offline && (
           <p className="p-3 text-center text-[11px] text-muted-foreground">
-            没有找到匹配的图标
+            没有找到匹配的图标（Iconify 搜索暂支持英文关键词）
           </p>
         )}
       </div>
       <p className="text-[11px] text-muted-foreground">
-        默认展示精选集合，输入关键词搜索全库。
+        默认展示精选集合，输入英文关键词搜索全库。
       </p>
 
       <div className="flex flex-col gap-1.5">
@@ -134,12 +134,7 @@ export function LogoPanel() {
             setScene((draft) => {
               draft.logo = draft.logo
                 ? { ...draft.logo, source: { kind: "upload", dataUrl } }
-                : {
-                    source: { kind: "upload", dataUrl },
-                    size: 200,
-                    x: 50,
-                    y: 22,
-                  }
+                : createDefaultLogo({ kind: "upload", dataUrl })
             })
           }
         />
@@ -147,6 +142,30 @@ export function LogoPanel() {
 
       {scene.logo && (
         <>
+          <ColorField
+            label="颜色"
+            value={scene.logo.color ?? "#ffffff"}
+            onChange={(color) =>
+              setScene((draft) => {
+                if (draft.logo) draft.logo.color = color
+              })
+            }
+          />
+          {scene.logo.color && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-full"
+              onClick={() =>
+                setScene((draft) => {
+                  // 回到原始配色（undefined = 不着色）
+                  if (draft.logo) delete draft.logo.color
+                })
+              }
+            >
+              恢复原始配色
+            </Button>
+          )}
           <SliderField
             label="图标尺寸"
             value={scene.logo.size}

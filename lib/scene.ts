@@ -52,6 +52,11 @@ export type LogoLayer = {
   source:
     | { kind: "iconify"; code: string }
     | { kind: "upload"; dataUrl: string }
+  /**
+   * 着色（P2-2）：undefined = 原始配色（旧模板与分享 Scene 兼容，不强制字段）。
+   * 指定时绘制端做单色化合成（source-in），彩色 emoji 类仅在显式选色后套色。
+   */
+  color?: string
   /** 基准 px */
   size: number
   x: number
@@ -144,6 +149,14 @@ export function createDefaultScene(): Scene {
 
 /** logo 尺寸范围（基准 px）：画布手柄与面板滑块共用（P1-12） */
 export const LOGO_SIZE_RANGE: [number, number] = [40, 800]
+
+/**
+ * 新建 logo 的默认值（R-10 唯一定义处，P2-2）：
+ * color 不设 = 原始配色（单色图标保持 Iconify 原色、emoji 保持彩色）。
+ */
+export function createDefaultLogo(source: LogoLayer["source"]): LogoLayer {
+  return { source, size: 200, x: 50, y: 22 }
+}
 
 /** 恢复被移除的副标题：默认值唯一来源（R-10 / P1-7） */
 export function createDefaultSubtitle(): NonNullable<Scene["subtitle"]> {

@@ -79,6 +79,52 @@ export function getCachedImage(source: {
   return key ? cacheGet(key) : null
 }
 
+/** 着色结果缓存（P2-2）：同一 source+color 只合成一次 */
+const tintCache = new Map<string, HTMLCanvasElement>()
+const TINT_CACHE_MAX = 48
+
+/**
+ * 取可绘制物（图片或着色后的离屏 canvas）。
+ * color 未定义 = 原始配色（emoji 保持彩色、单色图标保持 Iconify 原色）；
+ * 显式选色才做 source-in 单色化合成。只被 drawLogo 调用（R-1 渲染管线内）。
+ */
+export function getLogoDrawable(
+  source: { kind: string; code?: string; dataUrl?: string },
+  color?: string,
+): HTMLImageElement | HTMLCanvasElement | null {
+  const img = getCachedImage(source)
+  if (!img) return null
+  const key = sourceKey(source)
+  if (!color || !key) return img
+  const tintKey = `${key}|tint:${color}`
+  const cached = tintCache.get(tintKey)
+  if (cached) {
+    tintCache.delete(tintKey)
+    tintCache.set(tintKey, cached)
+    return cached
+  }
+  const w = img.naturalWidth || img.width
+  const h = img.naturalHeight || img.height
+  if (!w || !h) return img
+  const canvas = document.createElement("canvas")
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return img
+  ctx.drawImage(img, 0, 0, w, h)
+  // 单色化：保留原图 alpha 形状，把颜色整体换成所选色
+  ctx.globalCompositeOperation = "source-in"
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, w, h)
+  tintCache.set(tintKey, canvas)
+  while (tintCache.size > TINT_CACHE_MAX) {
+    const oldest = tintCache.keys().next().value
+    if (oldest === undefined) break
+    tintCache.delete(oldest)
+  }
+  return canvas
+}
+
 /** 异步加载并缓存；并发调用共享同一 promise */
 export function preloadImage(source: {
   kind: string

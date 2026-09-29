@@ -12,7 +12,7 @@ import type {
   TextStyle,
 } from "@/lib/scene"
 import { fitTextBlock } from "@/lib/text/wrap"
-import { getCachedImage } from "./icons"
+import { getCachedImage, getLogoDrawable } from "./icons"
 
 export interface RenderContext {
   ctx: CanvasRenderingContext2D
@@ -189,10 +189,8 @@ export function drawText(
 /** 图标层：Iconify / 上传图，中心锚点，可带投影 */
 export function drawLogo(rc: RenderContext, logo: LogoLayer): void {
   const { ctx, width, height, scale } = rc
-  const img =
-    logo.source.kind === "upload"
-      ? getCachedImage({ kind: "upload", dataUrl: logo.source.dataUrl })
-      : getCachedImage({ kind: "iconify", code: logo.source.code })
+  // color 存在才着色（P2-2）；否则原图直绘（emoji 保持彩色）
+  const img = getLogoDrawable(logo.source, logo.color)
   if (!img) return
   const sizePx = logo.size * scale
   const rect = blockRect(
