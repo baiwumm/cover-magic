@@ -294,7 +294,7 @@ describe("fitTextBlock", () => {
     expect(r.ellipsis).toBe(false)
   })
 
-  it("autoFit=true：超宽段落优先缩字号保持单行，而不是换行", () => {
+  it("autoFit=true：2 行内自然换行，不缩字号（P2-1 放宽到 3 行）", () => {
     const m = makeMeasure()
     const r = fitTextBlock({
       text: "一二三四五六七",
@@ -304,9 +304,61 @@ describe("fitTextBlock", () => {
       autoFit: true,
       measure: m,
     })
-    expect(r.lines).toEqual(["一二三四五六七"])
-    expect(r.scale).toBeLessThan(1)
+    expect(r.lines).toEqual(["一二三四五", "六七"])
+    expect(r.scale).toBe(1)
     expect(r.ellipsis).toBe(false)
+  })
+
+  it("autoFit=true：长标题换到 3 行仍不缩字号、不截断", () => {
+    const m = makeMeasure()
+    // 500px / 每字 100px = 5 字一行；30 字 → 6 行，先试缩字号…
+    // 这里取 13 字：scale=1 时 3 行（5+5+3）放得下 → 保持原字号
+    const text = "一二三四五六七八九十abcde"
+    const r = fitTextBlock({
+      text,
+      fontPx: 100,
+      maxWidthPx: 500,
+      lineHeight: 1.25,
+      autoFit: true,
+      measure: m,
+    })
+    expect(r.lines.length).toBeLessThanOrEqual(3)
+    expect(r.scale).toBe(1)
+    expect(r.ellipsis).toBe(false)
+    expect(r.lines.join("")).toBe(text)
+  })
+
+  it("autoFit=true：超过 3 行才缩字号（缩字号优先于减行）", () => {
+    const m = makeMeasure()
+    // 40 字 → scale=1 时 8 行 > 3 → 缩字号；0.5 档 10 字/行 → 4 行仍 > 3，
+    // 阶段二减行 + 省略号兜底，但要求最终字号确实缩了（不是原字号硬截）
+    const text = "一二三四五六七八九十".repeat(4)
+    const r = fitTextBlock({
+      text,
+      fontPx: 100,
+      maxWidthPx: 500,
+      lineHeight: 1.25,
+      autoFit: true,
+      measure: m,
+    })
+    expect(r.scale).toBeLessThan(1)
+    expect(r.lines.length).toBeLessThanOrEqual(3)
+  })
+
+  it("autoFit=true：缩字号能放下时不加省略号（3 行内完整内容）", () => {
+    const m = makeMeasure()
+    const text = "一二三四五六七八九十".repeat(2)
+    const r = fitTextBlock({
+      text,
+      fontPx: 100,
+      maxWidthPx: 500,
+      lineHeight: 1.25,
+      autoFit: true,
+      measure: m,
+    })
+    expect(r.lines.join("")).toBe(text)
+    expect(r.ellipsis).toBe(false)
+    expect(r.lines.length).toBeLessThanOrEqual(3)
   })
 
   it("autoFit=false：超宽段落自由换行，不缩字号", () => {

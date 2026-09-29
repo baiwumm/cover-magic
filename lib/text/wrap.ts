@@ -194,8 +194,8 @@ export interface FitTextOptions {
   lineHeight: number
   maxLines?: number
   /**
-   * 超宽自动缩字号（R-8）：true 时行数上限 = 段落数（每个 \n 段一行），
-   * 放不下优先缩字号而非自动换行；缩到下限仍放不下才回退换行 → 省略号。
+   * 超宽自动缩字号（R-8）：true 时行数上限 = max(段落数, 3)——
+   * 允许长标题自然换到 3 行而不缩字号；超 3 行才走 缩字号 → 减行 → 省略号。
    */
   autoFit?: boolean
   /** 给定字号下单行文本宽度（px） */
@@ -226,7 +226,9 @@ export function fitTextBlock(opts: FitTextOptions): FitTextResult {
 
   const effMaxLines = (scale: number): number => {
     if (opts.maxLines !== undefined) return opts.maxLines
-    if (opts.autoFit) return Math.max(1, text.split("\n").length)
+    // autoFit：给长标题至多 3 行的自然换行空间（P2-1）。单行强制会把长标题
+    // 压成 0.5 倍字号再截断，与「中文排版引擎」卖点冲突；3 行内不缩字号。
+    if (opts.autoFit) return Math.max(3, text.split("\n").length)
     if (opts.maxHeightPx !== undefined) {
       return Math.max(
         1,
