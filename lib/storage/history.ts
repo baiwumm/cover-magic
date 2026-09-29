@@ -1,5 +1,5 @@
 /**
- * 撤销重做（R-25：上限 50 步，上限定义在 stores/scene-store.ts）。
+ * 撤销重做（上限 50 步，上限定义在 stores/scene-store.ts）。
  * zundo temporal 中间件已在 stores/scene-store.ts 应用；这里提供
  * 响应式的历史控制 hooks（按钮态）、命令式 helpers 与全局快捷键（P1-9）。
  */

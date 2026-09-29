@@ -57,6 +57,8 @@ export function CanvasStage() {
   const dimsRef = useRef({ w: 0, h: 0 })
   const dragRef = useRef<DragState | null>(null)
   const guidesRef = useRef<SnapGuide[]>([])
+  /** 递增绘制令牌（P2-7）：await 字体/资源期间若有新一轮绘制，本轮作废 */
+  const drawTokenRef = useRef(0)
   /** 当前生效的 Scene（拖拽中 = preview），供 overlay 计算与重绘 */
   const sceneRef = useRef(scene)
   sceneRef.current = dragRef.current?.preview ?? scene
@@ -65,6 +67,7 @@ export function CanvasStage() {
 
   /** 绘制场景层；sceneOverride 供拖拽预览 */
   const drawSceneLayer = useCallback(async (override?: Scene) => {
+    const token = ++drawTokenRef.current
     const canvas = canvasRef.current
     const wrap = wrapRef.current
     if (!canvas || !wrap) return
@@ -74,6 +77,8 @@ export function CanvasStage() {
       ...sceneFonts(active).map((f) => ensureFontLoaded(f.family, f.weight)),
       preloadSceneAssets(active),
     ])
+    // 陈旧绘制：await 期间已发起新绘制，本帧内容不再上屏（否则旧场景盖新场景）
+    if (token !== drawTokenRef.current) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
     const dpr = Math.min(window.devicePixelRatio || 1, 2)

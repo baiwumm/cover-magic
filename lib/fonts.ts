@@ -33,10 +33,3 @@ export async function ensureFontLoaded(
     // 字体加载失败：回退系统字体，不阻塞渲染
   }
 }
-
-/** 预热全部清单字重（编辑器挂载时调用） */
-export async function preloadFonts(): Promise<void> {
-  await Promise.all(
-    FONTS.flatMap((f) => f.weights.map((w) => ensureFontLoaded(f.family, w))),
-  )
-}

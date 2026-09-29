@@ -113,6 +113,8 @@ export function prepareText(
 ): PreparedText {
   const { ctx, width, scale } = rc
   const blockWidthBase = pctToPx(maxWidthPct, width)
+  // 字距只在量宽期间生效：save/restore 复位，避免泄漏到后续绘制（P2-7）
+  ctx.save()
   applyLetterSpacing(ctx, style.letterSpacing, scale)
   const fit = fitTextBlock({
     text: style.uppercase ? block.text.toUpperCase() : block.text,
@@ -134,6 +136,7 @@ export function prepareText(
     1,
     ...fit.lines.map((l) => ctx.measureText(l).width),
   )
+  ctx.restore()
   const blockHeightPx = Math.max(fontSizePx, fit.lines.length * lineBoxPx)
   return {
     lines: fit.lines,
@@ -164,6 +167,8 @@ export function drawText(
   )
   ctx.save()
   applyFont(ctx, text, prepared.fontSizePx)
+  // 绘制与量宽用同一份字距（量宽段已 save/restore 复位，这里在保存态内重设）
+  applyLetterSpacing(ctx, text.letterSpacing, scale)
   ctx.textBaseline = "top"
   if (opts.opacity !== undefined) ctx.globalAlpha = opts.opacity
   if (text.shadow > 0) {

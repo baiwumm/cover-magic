@@ -3,8 +3,6 @@
  * 数值均为社区/经验值，可能过期，控件上需给「数值可能过期」的次要说明。
  */
 
-import type { Ratio } from "@/lib/scene"
-
 export type PlatformGroup = "cn" | "os" | "general"
 
 export interface PlatformPreset {
@@ -67,14 +65,6 @@ export const GROUP_LABELS: Record<PlatformGroup, string> = {
   cn: "中文社区",
   os: "海外平台",
   general: "通用",
-}
-
-export function getPreset(id: string): PlatformPreset | undefined {
-  return PLATFORM_PRESETS.find((p) => p.id === id)
-}
-
-export function presetRatio(p: PlatformPreset): Ratio {
-  return { w: p.width, h: p.height }
 }
 
 /**

@@ -12,6 +12,11 @@ const IMAGE_CACHE_MAX = 48
 function cacheGet(key: string): HTMLImageElement | null {
   const img = imageCache.get(key)
   if (!img) return null
+  // 解码失败/破图（naturalWidth 0）不入绘制管线，直接丢弃（P2-7）
+  if (img.complete && img.naturalWidth === 0) {
+    imageCache.delete(key)
+    return null
+  }
   // 刷新到队尾（LRU）
   imageCache.delete(key)
   imageCache.set(key, img)
@@ -125,6 +130,19 @@ export function getLogoDrawable(
   return canvas
 }
 
+/** 加载失败负缓存（P2-7）：失败 key 冷却期内不再发起请求，避免每帧重试打爆接口 */
+const failedAt = new Map<string, number>()
+const FAIL_TTL_MS = 30_000
+
+function markFailed(key: string): void {
+  failedAt.set(key, Date.now())
+  while (failedAt.size > IMAGE_CACHE_MAX) {
+    const oldest = failedAt.keys().next().value
+    if (oldest === undefined) break
+    failedAt.delete(oldest)
+  }
+}
+
 /** 异步加载并缓存；并发调用共享同一 promise */
 export function preloadImage(source: {
   kind: string
@@ -135,6 +153,11 @@ export function preloadImage(source: {
   if (!key) return Promise.resolve(null)
   const cached = cacheGet(key)
   if (cached) return Promise.resolve(cached)
+  const failed = failedAt.get(key)
+  if (failed !== undefined) {
+    if (Date.now() - failed < FAIL_TTL_MS) return Promise.resolve(null)
+    failedAt.delete(key)
+  }
   const inflight = pending.get(key)
   if (inflight) return inflight
   const task = (async () => {
@@ -143,6 +166,8 @@ export function preloadImage(source: {
         ? ((await fetchIconifyDataUrl(source.code)) ?? "")
         : (source.dataUrl ?? "")
     const result = src ? await loadSource(key, src) : null
+    if (result) failedAt.delete(key)
+    else markFailed(key)
     pending.delete(key)
     return result
   })()
