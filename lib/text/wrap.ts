@@ -10,8 +10,13 @@ export const LINE_START_PROHIBITED = "，。、！？；：）》”’％‰·�
 /** 不得出现在行尾的标点 */
 export const LINE_END_PROHIBITED = "（《“‘"
 
+/**
+ * CJK 与全角标点；另外纳入 General Punctuation / Latin-1 中被中文排版当作
+ * 禁则标点的字符（· U+00B7、— U+2014、… U+2026、‰ U+2030）。
+ * 不纳入时它们会与相邻字母合并成拉丁 token，破折号/省略号可能整串落到行首（R-8）。
+ */
 const CJK_REGEX =
-  /[\u2e80-\u2eff\u3000-\u303f\u31c0-\u31ef\u3200-\u9fff\uf900-\ufaff\ufe30-\ufe4f\uff00-\uffef]/
+  /[\u00b7\u2014\u2026\u2030\u2e80-\u2eff\u3000-\u303f\u31c0-\u31ef\u3200-\u9fff\uf900-\ufaff\ufe30-\ufe4f\uff00-\uffef]/
 
 export interface WrapOptions {
   /** 行宽上限（px，不随字号变化） */
@@ -64,6 +69,21 @@ function endsWithProhibited(text: string): boolean {
 
 function tokensText(tokens: Token[]): string {
   return tokens.map((t) => t.text).join("")
+}
+
+/**
+ * token 需要下沉的上一行尾部 token 数（行尾禁则）：
+ * 开括号 / 开引号不得悬在行尾，需连同其前一字一起下沉。
+ */
+function endsWithSink(line: Token[]): number {
+  let sink = 0
+  while (
+    sink < line.length &&
+    endsWithProhibited(line[line.length - 1 - sink].text)
+  ) {
+    sink++
+  }
+  return sink
 }
 
 /**
@@ -140,29 +160,19 @@ export function wrapText(text: string, opts: WrapOptions): WrapResult {
         current.length &&
         measureText(tokensText([...current, token]).trimEnd()) > maxWidth
       ) {
-        if (token.latin) {
-          // 拉丁词整体换行；若行尾是禁则开引号/括号则一并下沉
-          let sink = 0
-          while (
-            sink < current.length &&
-            endsWithProhibited(current[current.length - 1 - sink].text)
-          ) {
-            sink++
-          }
-          const moved =
-            sink > 0 ? current.splice(current.length - sink, sink) : []
-          flush()
-          current = moved
-          current.push(token)
-        } else {
-          // CJK 逐字换行 + 行首禁则（标点随前字下沉）
-          const sink = kinsokuSink(current, token)
-          const moved =
-            sink > 0 ? current.splice(current.length - sink, sink) : []
-          flush()
-          current = moved
-          current.push(token)
-        }
+        // 断行前同时满足两条禁则（R-8），拉丁 token 与 CJK 逐字同构：
+        //  - 行尾禁则：开括号/开引号不悬行尾 → 连同其前字下沉
+        //  - 行首禁则：标点不落行首 → 连同其前字下沉
+        // 拉丁词不在此处拆断（整词换行），词本身超宽走上面的硬拆兜底
+        const sink = Math.max(
+          endsWithSink(current),
+          kinsokuSink(current, token),
+        )
+        const moved =
+          sink > 0 ? current.splice(current.length - sink, sink) : []
+        flush()
+        current = moved
+        current.push(token)
       } else {
         current.push(token)
       }
@@ -262,7 +272,9 @@ export function fitTextBlock(opts: FitTextOptions): FitTextResult {
   const kept = lines.slice(0, maxLines)
   const last = kept[kept.length - 1]
   // 末行塞入省略号，塞不下就去字符，再不行就只留省略号
+  // 先剥离行尾禁则：开括号/开引号（段落正好以其结尾时）不能悬在省略号前
   let trimmed = last
+  while (trimmed && endsWithProhibited(trimmed)) trimmed = trimmed.slice(0, -1)
   while (trimmed && measure(trimmed + ELLIPSIS, size) > maxWidthPx) {
     trimmed = trimmed.slice(0, -1)
   }

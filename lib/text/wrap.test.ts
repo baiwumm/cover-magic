@@ -86,6 +86,65 @@ describe("wrapText", () => {
     }
   })
 
+  it("行尾禁则：开括号恰在断点处连同前字下沉（CJK 分支）", () => {
+    const m = makeMeasure()
+    // 行宽 500：'一二三四' 后 '（' 恰好填满，"（" 不得停在第 1 行行尾
+    const text = "一二三四（五六七八九十"
+    const { lines } = wrapText(text, { maxWidth: 500, measureText: m })
+    expect(lines[0]).toBe("一二三四")
+    for (const line of lines) {
+      const last = line[line.length - 1]
+      expect(
+        last && LINE_END_PROHIBITED.includes(last),
+        `行尾出现禁则标点：${line}`,
+      ).toBeFalsy()
+      expect(m(line)).toBeLessThanOrEqual(500)
+    }
+    expect(lines.join("")).toBe(text)
+  })
+
+  it("行尾禁则：开引号 + 下一行超宽时整组下沉，引号不留行尾", () => {
+    const m = makeMeasure()
+    // '“' 半角宽 55：'一二三四“' 恰为 455，后面接 5 个 CJK 必然超宽
+    const text = "一二三四“五六七八九十"
+    const { lines } = wrapText(text, { maxWidth: 500, measureText: m })
+    for (const line of lines) {
+      const last = line[line.length - 1]
+      expect(
+        last && LINE_END_PROHIBITED.includes(last),
+        `行尾出现禁则标点：${line}`,
+      ).toBeFalsy()
+    }
+    expect(lines[0]).toBe("一二三四")
+    expect(lines.join("")).toBe(text)
+  })
+
+  it("行首禁则：破折号不得落行首（新增 ·—…‰ token 化）", () => {
+    const m = makeMeasure()
+    const text = "标题甲乙丙——副标题"
+    const { lines } = wrapText(text, { maxWidth: 500, measureText: m })
+    expect(lines.join("")).toBe(text)
+    for (const line of lines) {
+      expect(
+        LINE_START_PROHIBITED.includes(line[0]),
+        `行首出现禁则标点：${line}`,
+      ).toBe(false)
+    }
+  })
+
+  it("行首禁则：省略号与间隔号不落行首", () => {
+    const m = makeMeasure()
+    const text = "甲乙丙·说明……结尾更多内容"
+    const { lines } = wrapText(text, { maxWidth: 500, measureText: m })
+    expect(lines.join("")).toBe(text)
+    for (const line of lines) {
+      expect(
+        LINE_START_PROHIBITED.includes(line[0]),
+        `行首出现禁则标点：${line}`,
+      ).toBe(false)
+    }
+  })
+
   it("连续标点下沉：多字标点簇不落行首", () => {
     const m = makeMeasure()
     const { lines } = wrapText("他说完了！！！然后", {
@@ -262,6 +321,24 @@ describe("fitTextBlock", () => {
     })
     expect(r.lines.length).toBeGreaterThan(1)
     expect(r.scale).toBe(1)
+  })
+
+  it("省略号降级：拼省略号前剥离行尾禁则（开括号不悬在省略号前）", () => {
+    const m = makeMeasure()
+    // 第 1 段以「（」结尾（段落正好以其结尾时行尾禁则无从下沉）；
+    // 第 2 段很长，保证触发「减行 + 省略号」降级且末行就是第 1 段
+    const r = fitTextBlock({
+      text: `一二三四（\n${"五六七八九十".repeat(6)}`,
+      fontPx: 100,
+      maxWidthPx: 500,
+      lineHeight: 1.25,
+      maxLines: 1,
+      measure: m,
+    })
+    expect(r.ellipsis).toBe(true)
+    expect(r.lines).toHaveLength(1)
+    expect(r.lines[0]).toBe("一二三四…")
+    expect(r.lines[0]).not.toMatch(/（…$/)
   })
 
   it("缩字号以保持完整内容优先于省略号", () => {
