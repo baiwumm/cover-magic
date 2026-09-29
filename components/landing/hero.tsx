@@ -31,7 +31,9 @@ export function Hero() {
           />
         </h1>
 
-        <p className="max-w-xl text-base text-muted-foreground md:text-lg">
+        {/* 副标题宽度 44rem：576px（max-w-xl）会在「拖拽定/位」处断成 3 行且末行只剩 8 字，
+            704px 实测稳定 2 行（38+27 字），断点落在「高清导出，」前 */}
+        <p className="max-w-[44rem] text-base text-muted-foreground md:text-lg">
           {
             "Cover Magic 是一款中文友好的封面图设计工具：拖拽定位、中文断行、平台尺寸预设、实时预览与高清导出，全流程在浏览器完成。"
           }
