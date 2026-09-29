@@ -54,6 +54,12 @@ interface PendingHistory {
 
 let pendingHistory: PendingHistory | null = null
 
+/**
+ * 已解析的 zundo 入栈函数（zundo 只在建 store 时调用一次 handleSet 工厂）。
+ * flushPendingHistory 用它把待提交载荷同步入栈（P1-1）。
+ */
+let commitHistoryEntry: ((pending: PendingHistory) => void) | null = null
+
 function cancelPendingHistory(): void {
   if (pendingHistory) {
     clearTimeout(pendingHistory.timer)
@@ -121,6 +127,10 @@ export const useSceneStore = create<SceneStore>()(
           replace?: boolean,
           currentState?: HistoryStateArg,
         ) => void
+        const commit = (p: PendingHistory) => {
+          handleSet(p.pastState, p.replace, p.currentState)
+        }
+        commitHistoryEntry = commit
         return (pastState, replace, currentState) => {
           if (pendingHistory) {
             pendingHistory.currentState = currentState
@@ -136,13 +146,26 @@ export const useSceneStore = create<SceneStore>()(
           pendingHistory.timer = setTimeout(() => {
             const p = pendingHistory
             pendingHistory = null
-            if (p) handleSet(p.pastState, p.replace, p.currentState)
+            if (p) commit(p)
           }, HISTORY_MERGE_MS)
         }
       },
     },
   ),
 )
+
+/**
+ * 立即提交未到期的合并窗口（P1-1）：撤销/重做、导出、生成分享链接前必须调用。
+ * 语义 = 该笔操作立刻入史（等价于等到 400ms 窗口自然到期）。
+ * zundo 的 undo/redo 走 raw set，既不触发也不取消这里的定时器，不 flush 会跳步。
+ */
+export function flushPendingHistory(): void {
+  const pending = pendingHistory
+  if (!pending) return
+  pendingHistory = null
+  clearTimeout(pending.timer)
+  commitHistoryEntry?.(pending)
+}
 
 /** 恢复/清史时取消未提交的合并窗口（避免 clear 后又补一条） */
 export function cancelPendingHistoryMerge(): void {

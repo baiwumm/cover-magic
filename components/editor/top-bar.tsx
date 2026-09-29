@@ -29,7 +29,7 @@ import {
   encodeSceneToHash,
   SHARE_URL_WARN_LENGTH,
 } from "@/lib/storage/share-url"
-import { useSceneStore } from "@/stores/scene-store"
+import { flushPendingHistory, useSceneStore } from "@/stores/scene-store"
 
 interface TopBarProps {
   onOpenExport: () => void
@@ -191,6 +191,8 @@ export function TopBar({ onOpenExport, onOpenShortcuts }: TopBarProps) {
           title="复制分享链接"
           onClick={() => {
             void (async () => {
+              // P1-1：分享链接要落在已入史的终态上（与导出口径一致）
+              flushPendingHistory()
               const hash = await encodeSceneToHash(
                 useSceneStore.getState().scene,
               )

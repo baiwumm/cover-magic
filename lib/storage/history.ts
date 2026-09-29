@@ -6,7 +6,7 @@
 
 import { useEffect } from "react"
 import { useStore } from "zustand"
-import { useSceneStore } from "@/stores/scene-store"
+import { flushPendingHistory, useSceneStore } from "@/stores/scene-store"
 
 /** zundo 挂在 store 上的 temporal vanilla store */
 export const temporalStore = useSceneStore.temporal
@@ -15,8 +15,15 @@ export const temporalStore = useSceneStore.temporal
 export function useHistoryControls() {
   const pastCount = useStore(temporalStore, (s) => s.pastStates.length)
   const futureCount = useStore(temporalStore, (s) => s.futureStates.length)
-  const undo = () => temporalStore.getState().undo()
-  const redo = () => temporalStore.getState().redo()
+  // P1-1：先同步提交 400ms 合并窗口里的待入栈操作，再撤销/重做
+  const undo = () => {
+    flushPendingHistory()
+    temporalStore.getState().undo()
+  }
+  const redo = () => {
+    flushPendingHistory()
+    temporalStore.getState().redo()
+  }
   return {
     undo,
     redo,
@@ -43,13 +50,16 @@ export function useHistoryShortcuts() {
       if (isEditableTarget(e.target)) return
       const key = e.key.toLowerCase()
       const api = temporalStore.getState()
+      // P1-1：快捷键入口同样先提交合并窗口，否则撤销会跳步/丢重做栈
       if (key === "z" && !e.shiftKey) {
         e.preventDefault()
+        flushPendingHistory()
         api.undo()
         return
       }
       if ((key === "z" && e.shiftKey) || key === "y") {
         e.preventDefault()
+        flushPendingHistory()
         api.redo()
       }
     }

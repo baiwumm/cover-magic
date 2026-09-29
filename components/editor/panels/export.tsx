@@ -13,7 +13,7 @@ import {
   type ExportFormat,
   exportSceneToBlob,
 } from "@/lib/render/export"
-import { useSceneStore } from "@/stores/scene-store"
+import { flushPendingHistory, useSceneStore } from "@/stores/scene-store"
 
 /**
  * 导出面板（5.1-5.4）：目标尺寸 + 格式 + 质量（PNG 时禁用）
@@ -49,6 +49,8 @@ export function ExportPanel() {
     setEstimate({ text, scene, format, quality })
 
   const doExport = async () => {
+    // P1-1：导出前提交合并窗口，导出结果 = 一次完整可撤销的操作终态
+    flushPendingHistory()
     setBusy(true)
     try {
       const blob = await exportSceneToBlob(scene, format, quality)
@@ -71,6 +73,7 @@ export function ExportPanel() {
   }
 
   const estimateSize = async () => {
+    flushPendingHistory()
     setBusy(true)
     try {
       const blob = await exportSceneToBlob(scene, format, quality)
@@ -86,6 +89,7 @@ export function ExportPanel() {
   }
 
   const copyToClipboard = async () => {
+    flushPendingHistory()
     setBusy(true)
     try {
       const blob = await exportSceneToBlob(scene, "png")
