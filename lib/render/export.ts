@@ -7,6 +7,7 @@ import { ensureFontLoaded } from "@/lib/fonts"
 import type { Scene } from "@/lib/scene"
 import { drawScene } from "./draw-scene"
 import { preloadSceneAssets } from "./icons"
+import { sceneFonts } from "./primitives"
 
 export type ExportFormat = "png" | "jpeg" | "webp"
 
@@ -35,8 +36,8 @@ export async function renderToCanvas(scene: Scene): Promise<HTMLCanvasElement> {
   if (!ctx) throw new Error("无法创建画布上下文")
   const [failed] = await Promise.all([
     preloadSceneAssets(scene),
-    ensureFontLoaded("Maple Mono CN", 400),
-    ensureFontLoaded("Maple Mono CN", 700),
+    // 字体取自场景（sceneFonts），不再硬编码族名（P2-4）
+    ...sceneFonts(scene).map((f) => ensureFontLoaded(f.family, f.weight)),
   ])
   // P1-24：资源加载失败不再静默缺图导出
   if (failed.length > 0) {

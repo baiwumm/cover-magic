@@ -20,6 +20,7 @@ import {
   type SlotKey,
 } from "@/lib/render/element-rects"
 import { preloadSceneAssets } from "@/lib/render/icons"
+import { sceneFonts } from "@/lib/render/primitives"
 import { LOGO_SIZE_RANGE, type Scene } from "@/lib/scene"
 import { useSceneStore } from "@/stores/scene-store"
 
@@ -69,8 +70,8 @@ export function CanvasStage() {
     if (!canvas || !wrap) return
     const active = override ?? sceneRef.current
     await Promise.all([
-      ensureFontLoaded("Maple Mono CN", 400),
-      ensureFontLoaded("Maple Mono CN", 700),
+      // 字体取自场景（sceneFonts），不再硬编码族名（P2-4）
+      ...sceneFonts(active).map((f) => ensureFontLoaded(f.family, f.weight)),
       preloadSceneAssets(active),
     ])
     const ctx = canvas.getContext("2d")

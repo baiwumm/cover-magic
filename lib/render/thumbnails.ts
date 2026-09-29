@@ -7,6 +7,7 @@ import { ensureFontLoaded } from "@/lib/fonts"
 import type { Scene } from "@/lib/scene"
 import { drawScene } from "./draw-scene"
 import { preloadSceneAssets } from "./icons"
+import { sceneFonts } from "./primitives"
 
 const cache = new Map<string, string>()
 const pending = new Map<string, Promise<string>>()
@@ -27,8 +28,8 @@ export async function renderThumbnail(
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("无法创建缩略图画布")
   await Promise.all([
-    ensureFontLoaded("Maple Mono CN", 400),
-    ensureFontLoaded("Maple Mono CN", 700),
+    // 字体取自场景（sceneFonts），不再硬编码族名（P2-4）
+    ...sceneFonts(scene).map((f) => ensureFontLoaded(f.family, f.weight)),
     preloadSceneAssets(scene),
   ])
   drawScene(ctx, scene, { width: canvas.width, height: canvas.height })
